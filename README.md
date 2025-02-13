@@ -2,8 +2,7 @@
 
 # TODOS:
 
-- convert mappings into one matrix readable by scipy
-- Load data samples with trimesh.
+- order of loading ply files needs to be correct.
 
 # Notes:
 
@@ -25,3 +24,9 @@
 - maps?
 - how is the program used, should we provide interface, or are our code gonna be used and the arrays are provided, or is it by file paths?
 - subsampling
+
+
+
+
+Info gathered:
+- Maybe use parquet for lazy loading of data, if it cannot be in main memory
