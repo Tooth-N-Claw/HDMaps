@@ -1,6 +1,3 @@
-"""
-Converts maps in mat format to polar format
-"""
 import os
 import glob
 import re
@@ -9,7 +6,7 @@ from scipy.io import loadmat
 import pickle
 
 
-mat_dir = "../maps/"  # Update to the directory where your .mat files are located
+mat_dir = "../maps/"
 mat_files = glob.glob(os.path.join(mat_dir, "soften_mat_*.mat"))
 
 mat_files = sorted(
