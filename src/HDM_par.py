@@ -3,19 +3,22 @@ import numpy as np
 import scipy.sparse as sparse
 from scipy.io import loadmat
 import trimesh
-from tqdm import tqdm  # Add this for better progress tracking
-from visualize import visualize
+from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import multiprocessing
 
-class HorizontalDiffusionMaps:
+class ParallelHorizontalDiffusionMaps:
     """
-    Implementation of Horizontal Diffusion Maps algorithm for analyzing shape data.
+    Parallelized implementation of Horizontal Diffusion Maps algorithm.
     """
     
-    def __init__(self, data_dir="../platyrrhine/", num_neighbors=4, base_epsilon=0.04, num_eigenvectors=4):
+    def __init__(self, data_dir="../platyrrhine/", num_neighbors=4, base_epsilon=0.04, 
+                 num_eigenvectors=4, n_jobs=None):
         self.data_dir = data_dir
         self.num_neighbors = num_neighbors
         self.base_epsilon = base_epsilon
         self.num_eigenvectors = num_eigenvectors
+        self.n_jobs = n_jobs or max(1, multiprocessing.cpu_count() - 1)
         
         # Will be populated during processing
         self.data_samples = None
@@ -36,21 +39,31 @@ class HorizontalDiffusionMaps:
         except Exception as e:
             raise Exception(f"Error loading map matrices: {e}")
     
+    def _load_single_sample(self, name_tuple):
+        name = name_tuple[0]
+        path = os.path.join(self.data_dir, "ReparametrizedOFF", f"{name}.off")
+        try:
+            vertices = trimesh.load(path).vertices
+            return vertices
+        except Exception as e:
+            print(f"Warning: Could not load {path}: {e}")
+            return None
+    
     def load_data_samples(self):
         try:
             names_path = os.path.join(self.data_dir, "Names.mat")
             names = loadmat(names_path)["Names"]
             
-            off_dir = os.path.join(self.data_dir, "ReparametrizedOFF")
             data_samples = []
             
-            for name in tqdm(names[0], desc="Loading data samples"):
-                path = os.path.join(off_dir, f"{name[0]}.off")
-                try:
-                    vertices = trimesh.load(path).vertices
-                    data_samples.append(vertices)
-                except Exception as e:
-                    print(f"Warning: Could not load {path}: {e}")
+            # Use ProcessPoolExecutor for I/O bound operations
+            with ProcessPoolExecutor(max_workers=self.n_jobs) as executor:
+                futures = [executor.submit(self._load_single_sample, name) for name in names[0]]
+                
+                for future in tqdm(futures, desc="Loading data samples"):
+                    result = future.result()
+                    if result is not None:
+                        data_samples.append(result)
             
             return data_samples
         except Exception as e:
@@ -62,6 +75,8 @@ class HorizontalDiffusionMaps:
             base_dist = loadmat(dist_path)["dists"]
             base_dist = base_dist - np.diag(np.diag(base_dist))
             
+            # These operations can be parallelized with NumPy's threading
+            # Make sure NumPy is using a parallel BLAS implementation (MKL, OpenBLAS)
             s_dists = np.sort(base_dist, axis=1)
             row_nns = np.argsort(base_dist, axis=1)
             
@@ -71,7 +86,7 @@ class HorizontalDiffusionMaps:
             
             # Build sparse matrix with proper indexing
             rows = np.repeat(np.arange(self.num_data_samples).reshape(-1, 1), 
-                            self.num_neighbors, axis=1).flatten()
+                           self.num_neighbors, axis=1).flatten()
             cols = row_nns.flatten()
             vals = s_dists.flatten()
             
@@ -87,9 +102,15 @@ class HorizontalDiffusionMaps:
             min_weights = np.minimum(base_weights_array, base_weights_array_T)
             base_weights = sparse.csr_matrix(min_weights)
             
-            # Update the distances with values from the symmetrized matrix
-            for j in range(self.num_data_samples):
-                s_dists[j, :] = base_weights[j, row_nns[j, :]].toarray().flatten()
+            # Parallel update of distances
+            def update_row_dists(j):
+                return base_weights[j, row_nns[j, :]].toarray().flatten()
+            
+            with ThreadPoolExecutor(max_workers=self.n_jobs) as executor:
+                updated_dists = list(executor.map(update_row_dists, range(self.num_data_samples)))
+            
+            for j, updated_dist in enumerate(updated_dists):
+                s_dists[j, :] = updated_dist
             
             # Apply kernel function
             s_dists = np.exp(-np.square(s_dists) / self.base_epsilon)
@@ -104,30 +125,59 @@ class HorizontalDiffusionMaps:
             0, 0
         )
     
+    def _process_diffusion_row(self, j, base_diffusion_mat, row_nns):
+        """Process a single row of the diffusion matrix computation."""
+        local_row_idx = []
+        local_col_idx = []
+        local_vals = []
+        
+        for nns in range(self.num_neighbors):
+            if base_diffusion_mat[j, nns] == 0:
+                continue
+            
+            k = row_nns[j, nns]
+            map_matrix = self.maps[j, k]
+            
+            # Forward mapping
+            coo = map_matrix.tocoo()
+            local_row_idx.extend(coo.row + self.cumulative_block_indicies[j])
+            local_col_idx.extend(coo.col + self.cumulative_block_indicies[k])
+            local_vals.extend(base_diffusion_mat[j, nns] * coo.data)
+            
+            # Backward mapping (transposed)
+            coo = map_matrix.T.tocoo()
+            local_row_idx.extend(coo.row + self.cumulative_block_indicies[k])
+            local_col_idx.extend(coo.col + self.cumulative_block_indicies[j])
+            local_vals.extend(base_diffusion_mat[j, nns] * coo.data)
+        
+        return local_row_idx, local_col_idx, local_vals
+    
     def compute_diffusion_matrix(self, base_diffusion_mat, row_nns):
+        # Use ProcessPoolExecutor for CPU-bound operations
+        with ProcessPoolExecutor(max_workers=self.n_jobs) as executor:
+            futures = []
+            for j in range(self.num_data_samples):
+                futures.append(
+                    executor.submit(
+                        self._process_diffusion_row, 
+                        j, base_diffusion_mat, row_nns
+                    )
+                )
+            
+            # Collect results
+            all_results = []
+            for future in tqdm(futures, desc="Computing diffusion matrix"):
+                all_results.append(future.result())
+        
+        # Consolidate results
         mat_row_idx = []
         mat_col_idx = []
         vals = []
         
-        for j in tqdm(range(self.num_data_samples), desc="Computing diffusion matrix"):
-            for nns in range(self.num_neighbors):
-                if base_diffusion_mat[j, nns] == 0:
-                    continue
-                
-                k = row_nns[j, nns]
-                map_matrix = self.maps[j, k]
-                
-                # Forward mapping
-                coo = map_matrix.tocoo()
-                mat_row_idx.extend(coo.row + self.cumulative_block_indicies[j])
-                mat_col_idx.extend(coo.col + self.cumulative_block_indicies[k])
-                vals.extend(base_diffusion_mat[j, nns] * coo.data)
-                
-                # Backward mapping (transposed)
-                coo = map_matrix.T.tocoo()
-                mat_row_idx.extend(coo.row + self.cumulative_block_indicies[k])
-                mat_col_idx.extend(coo.col + self.cumulative_block_indicies[j])
-                vals.extend(base_diffusion_mat[j, nns] * coo.data)
+        for row_idx, col_idx, val in all_results:
+            mat_row_idx.extend(row_idx)
+            mat_col_idx.extend(col_idx)
+            vals.extend(val)
         
         # Determine proper dimensions for the matrix
         total_size = self.cumulative_block_indicies[-1]
@@ -159,12 +209,15 @@ class HorizontalDiffusionMaps:
     
     def eigendecomposition(self, horizontal_diffusion_laplacian):
         try:
+            # SciPy's eigsh can leverage parallelism via underlying ARPACK/BLAS
             eigvals, eigvecs = sparse.linalg.eigsh(
                 horizontal_diffusion_laplacian, 
                 k=self.num_eigenvectors, 
                 which="LM", 
                 maxiter=5000, 
-                tol=1e-10
+                tol=1e-10,
+                # Use more Lanczos vectors for better convergence
+                ncv=min(horizontal_diffusion_laplacian.shape[0], 2*self.num_eigenvectors+1)
             )
             
             # Sort in descending order
@@ -177,7 +230,7 @@ class HorizontalDiffusionMaps:
     
     def run(self):
         """
-        Run the complete HDM algorithm.
+        Run the complete HDM algorithm with parallelization.
         
         Returns:
             The final HDM embedding
@@ -227,13 +280,16 @@ class HorizontalDiffusionMaps:
             raise
 
 
-
 def main():
     """
-    Main entry point for running the HDM algorithm.
+    Main entry point for running the parallelized HDM algorithm.
     """
     try:
-        hdm = HorizontalDiffusionMaps()
+        # Use all available CPUs except one
+        n_jobs = max(1, multiprocessing.cpu_count() - 1)
+        print(f"Running with {n_jobs} parallel workers")
+        
+        hdm = ParallelHorizontalDiffusionMaps(n_jobs=n_jobs)
         embedding = hdm.run()
         visualize(embedding)
     except Exception as e:
