@@ -238,9 +238,8 @@ class HorizontalDiffusionMaps:
             )
             
             # Sort in descending order
-            reverse_idx = np.argsort(eigvals)[::-1]
-            eigvals = eigvals[reverse_idx]
-            eigvecs = eigvecs[:, reverse_idx]
+            eigvals = eigvals[::-1]
+            eigvecs = eigvecs[:, ::-1]
             
             return eigvals, eigvecs
         except Exception as e:
