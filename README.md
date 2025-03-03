@@ -1,5 +1,5 @@
 # HDM_Python
 
-In order to run, add the data prepared by Rob. If data folder is in the HDM_Python directory, it should give a pringle shape by running HDM.py from within the src folder.
+In order to run, add the data prepared by Rob. The data directory should be inside HDM_Python, and needs to be named "platyrrhine". By running HDM.py from within the src folder, you should get the pringle below.
 
 POC:
