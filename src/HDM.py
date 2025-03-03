@@ -7,6 +7,7 @@ import numpy as np
 import trimesh
 import scipy.sparse as sparse
 
+
 def symmetrize(matrix: np.ndarray) -> np.ndarray:
     return 1/2*(matrix + matrix.T)
 
@@ -26,21 +27,19 @@ def load_data_samples() -> list[np.ndarray]:
 def compute_base_kernel(num_neighbors, base_epsilon):
     base_dist = loadmat("../platyrrhine/FinalDists.mat")["dists"]
     base_dist = base_dist - np.diag(np.diag(base_dist))
-    N = base_dist.shape[0]  # number of points/species
+    num_data_samples = base_dist.shape[0]
 
     s_dists = np.sort(base_dist, axis=1)
     row_nns = np.argsort(base_dist, axis=1)
 
-    
     s_dists = s_dists[:, 1:num_neighbors+1]
     row_nns = row_nns[:, 1:num_neighbors+1]
     
-
-    rows = np.repeat(np.arange(N).reshape(-1, 1), num_neighbors, axis=1).flatten()
+    rows = np.repeat(np.arange(num_data_samples).reshape(-1, 1), num_neighbors, axis=1).flatten()
     cols = row_nns.flatten()
     vals = s_dists.flatten()
     
-    base_weights = sparse.csr_matrix((vals, (rows, cols)), shape=(N, N))
+    base_weights = sparse.csr_matrix((vals, (rows, cols)), shape=(num_data_samples, num_data_samples))
 
     base_weights_array = base_weights.toarray()
     base_weights_array_T = base_weights.T.toarray()
@@ -48,7 +47,7 @@ def compute_base_kernel(num_neighbors, base_epsilon):
     base_weights = sparse.csr_matrix(min_weights)
 
 
-    for j in range(N):
+    for j in range(num_data_samples):
         s_dists[j, :] = base_weights[j, row_nns[j, :]].toarray().flatten()
 
     s_dists = np.exp(-np.square(s_dists) / base_epsilon)
@@ -56,10 +55,8 @@ def compute_base_kernel(num_neighbors, base_epsilon):
     return s_dists, row_nns
 
 
-
 def cumulative_indices(data_samples: list[np.ndarray]) -> np.ndarray:
     return np.insert(np.cumsum([len(sample) for sample in data_samples], dtype=np.int32), 0, 0)
-
 
 
 def compute_diffusion_matrix(base_diffusion_mat, num_data_samples: int, maps: dict, num_neighbors: int, row_nns, cumulative_block_indicies) -> csr_matrix:
@@ -76,41 +73,26 @@ def compute_diffusion_matrix(base_diffusion_mat, num_data_samples: int, maps: di
             k = row_nns[j, nns]
             map = maps[j, k]
     
-            if sparse.issparse(map): # TODO: should either be sparse or dense, not both, so remove one of them
-                # For sparse matrix
-                coo = map.tocoo()
-                row_idx, col_idx, val = coo.row, coo.col, coo.data
-            else:
-                # For dense matrix
-                row_idx, col_idx = np.nonzero(map)
-                val = map[row_idx, col_idx]
+            coo = map.tocoo()
+            row_idx, col_idx, val = coo.row, coo.col, coo.data
             
-
             mat_row_idx.extend(row_idx + cumulative_block_indicies[j]) 
             mat_col_idx.extend(col_idx + cumulative_block_indicies[k])
             vals.extend(base_diffusion_mat[j, nns] * val)
                         
-            if sparse.issparse(map):# TODO: should either be sparse or dense, not both, so remove one of them
-                coo = map.T.tocoo()
-                row_idx, col_idx, val = coo.row, coo.col, coo.data
-            else:
-                map_T = map.T
-                row_idx, col_idx = np.nonzero(map_T)
-                val = map_T[row_idx, col_idx]
-            
+            coo = map.T.tocoo()
+            row_idx, col_idx, val = coo.row, coo.col, coo.data
             
             mat_row_idx.extend(row_idx + cumulative_block_indicies[k])  
             mat_col_idx.extend(col_idx + cumulative_block_indicies[j]) 
             vals.extend(base_diffusion_mat[j, nns] * val)
                 
-    N = cumulative_block_indicies[-1]
-    diffusion_matrix = sparse.csr_matrix((vals, (mat_row_idx, mat_col_idx)), shape=(N, N))
+    diffusion_matrix = sparse.csr_matrix((vals, (mat_row_idx, mat_col_idx)), shape=(cumulative_block_indicies[-1], cumulative_block_indicies[-1]))
+    
     return diffusion_matrix
 
 
 def compute_horizontal_diffusion_laplacian(diffusion_matrix) -> tuple[np.ndarray, np.ndarray]:
-    # diag_vals = 1 / np.sqrt(diffusion_matrix.sum(axis=0))
-    #sqrt_diag = 1.0 / np.sqrt(np.sum(diffusion_matrix, axis=0))
     sqrt_diag = scipy.sparse.diags(1.0 / np.sqrt(np.sum(diffusion_matrix, axis=0).A1), 0)
 
     horizontal_diffusion_laplacian = sqrt_diag @ diffusion_matrix @ sqrt_diag
@@ -122,32 +104,39 @@ def compute_horizontal_diffusion_laplacian(diffusion_matrix) -> tuple[np.ndarray
 def eigendecomposition(horizontal_diffusion_laplacian, num_return_eigen_vec) -> tuple[np.ndarray, np.ndarray]:  # type: ignore
     eigvals, eigvecs = scipy.sparse.linalg.eigsh(horizontal_diffusion_laplacian, k=num_return_eigen_vec, which="LM", maxiter=5000, tol=1e-10)
 
-    # Reverse the order of eigenvalues and eigenvectors
-    # This creates a reversed index array
-    reverse_idx = np.arange(len(eigvals))[::-1]
-    eigvals = eigvals[reverse_idx]
-    eigvecs = eigvecs[:, reverse_idx]
-    print(eigvals)
+    eigvals = eigvals[::-1]
+    eigvecs = eigvecs[:, ::-1]
     
     return (eigvals, eigvecs)
 
 
 def HDM():    
     num_neighbors = 4
+    base_epsilon = 0.04
+    num_eigenvectors = 4
+
     data_samples = load_data_samples()
     print("loaded data samples")
-    num_data_samples = len(data_samples)
-    maps = load_maps()
+
     cumulative_block_indicies = cumulative_indices(data_samples)
-    print("loaded maps")
-    base_diffusion_matrix, row_nns = compute_base_kernel(num_neighbors, 0.04)
-    print("loaded base dist")
-    diffusion_matrix = compute_diffusion_matrix(base_diffusion_matrix, num_data_samples, maps, num_neighbors, row_nns, cumulative_block_indicies)
-    print("diffusion matrix computed")
-    horizontal_diffusion_laplacian, sqrt_diag = compute_horizontal_diffusion_laplacian(diffusion_matrix)
-    print("horizontal_laplacian constructed")
-    eigvals, eigvecs = eigendecomposition(horizontal_diffusion_laplacian, 4)
+    num_data_samples = len(data_samples)
     
+    maps = load_maps()
+    print("Loaded mappings")
+
+    base_diffusion_matrix, row_nns = compute_base_kernel(num_neighbors, base_epsilon)
+    print("Loaded base distance")
+
+    diffusion_matrix = compute_diffusion_matrix(base_diffusion_matrix, num_data_samples, maps, num_neighbors, row_nns, cumulative_block_indicies)
+    print("Computed Diffusion Matrix")
+
+    horizontal_diffusion_laplacian, sqrt_diag = compute_horizontal_diffusion_laplacian(diffusion_matrix)
+    print("Computed Horizontal Diffusion Laplacian")
+
+    eigvals, eigvecs = eigendecomposition(horizontal_diffusion_laplacian, num_eigenvectors)
+    print("Computed eigendecomposition")
+
+    # Construct coordinates
     sqrt_diag.data[np.isinf(sqrt_diag.data)] = 0
 
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
