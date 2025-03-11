@@ -13,3 +13,8 @@ By running HDM.py from within the src folder, you should get the pringle below.
 Proof of Concept Pringle (PCP):
 
 ![](pringle.png)
+
+open questions:
+
+- Is it okay to assume the all data samples can be in ram at the same time?
+- sparsity parameter vs BNN (number neighbors to include)
