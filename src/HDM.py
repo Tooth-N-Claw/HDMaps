@@ -6,6 +6,7 @@ from visualize import visualize
 import numpy as np
 from tqdm import tqdm
 import trimesh
+from HDM_GPU import run_hdm_gpu
 from HDM_CPU import run_hdm_cpu
 from scipy.io import loadmat
 
@@ -63,6 +64,8 @@ def run_HDM(backend, hdm_config, hdm_data):
     match backend:
         case "CPU":
             return run_hdm_cpu(hdm_config, hdm_data)
+        case "GPU":
+            return run_hdm_gpu(hdm_config, hdm_data)
 
 
 def HDM(
@@ -77,7 +80,7 @@ def HDM(
     #kernel_func_fiber: Callable[[np.ndarray, np.ndarray], np.float32],
     num_eigenvectors: int,
     subsample_mapping: float,
-    backend: str = "CPU",):
+    backend: str = "GPU",):
     """
     DOCUMENTATION HERE!
     """

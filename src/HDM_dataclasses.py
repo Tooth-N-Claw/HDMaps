@@ -5,7 +5,7 @@ import numpy as np
 @dataclass
 class HDMData:
     """State and intermediate data for Horizontal Diffusion Maps algorithm."""
-    data_samples: list = None
+    data_samples: list[np.ndarray] = None
     maps: any = None
     base_dist: any = None
     cumulative_block_indices: np.ndarray = None
@@ -17,3 +17,4 @@ class HDMConfig:
     num_neighbors: int = 4
     base_epsilon: float = 0.04
     num_eigenvectors: int = 4
+    device: str | None = None

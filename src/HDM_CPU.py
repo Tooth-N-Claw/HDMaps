@@ -18,17 +18,14 @@ def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.nd
         s_dists = np.sort(hdm_data.base_dist, axis=1)
         row_nns = np.argsort(hdm_data.base_dist, axis=1)
         
-        # Match the original implementation more closely
         s_dists = s_dists[:, 1:hdm_config.num_neighbors+1]
         row_nns = row_nns[:, 1:hdm_config.num_neighbors+1]
         
-        # Build sparse matrix with proper indexing
         rows = np.repeat(np.arange(hdm_data.num_data_samples).reshape(-1, 1), 
                         hdm_config.num_neighbors, axis=1).flatten()
         cols = row_nns.flatten()
         vals = s_dists.flatten()
         
-        # Create sparse matrix representation
         base_weights = sparse.csr_matrix(
             (vals, (rows, cols)), 
             shape=(hdm_data.num_data_samples, hdm_data.num_data_samples)
@@ -155,7 +152,7 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         
         eigvals, eigvecs = eigendecomposition(horizontal_diffusion_laplacian, hdm_config.num_eigenvectors)
         print("Eigendecomposition done")
-        
+         
         # Handle potential numerical issues
         inf_values = np.sum(np.isinf(sqrt_diag.data))
         if inf_values > 0:

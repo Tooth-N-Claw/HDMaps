@@ -18,3 +18,10 @@ open questions:
 
 - Is it okay to assume the all data samples can be in ram at the same time?
 - sparsity parameter vs BNN (number neighbors to include)
+
+Times:
+
+- HDM_CPU.py: 101.45s user 18.68s system 505% cpu 23.776 total
+
+TODO:
+load data as tensor instead of np array for gpu
