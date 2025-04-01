@@ -11,7 +11,6 @@ def symmetrize(matrix):
     return 0.5 * (matrix + matrix.T)
 
 
-
 def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData, device='cuda') -> tuple[torch.Tensor, torch.Tensor]:
     """Compute the base kernel for diffusion maps using GPU."""
     try:

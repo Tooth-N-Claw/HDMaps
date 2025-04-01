@@ -1,10 +1,11 @@
 import os
 import numpy as np
+import scipy
 import scipy.sparse as sparse
 from scipy.io import loadmat
 from tqdm import tqdm
 from HDM_dataclasses import HDMConfig, HDMData
-
+from scipy.spatial import distance_matrix
 
 def symmetrize(matrix):
     """Symmetrize a matrix."""
@@ -27,11 +28,10 @@ def calculate_base_dist(hdm_data: HDMData) -> np.ndarray:
 def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.ndarray, np.ndarray]:
     """Compute the base kernel for diffusion maps."""
     try:
-        if hdm_data.base_dist is None:
-            print("hello")
-            bast_dist = calculate_base_dist(hdm_data)
+        if HDMData.base_dist is None:
+            base_dist = calculate_base_dist(hdm_data)
         else:
-            base_dist = hdm.base_dist
+            base_dist = HDMData.base_dist
             
             
         s_dists = np.sort(base_dist, axis=1)
@@ -67,29 +67,35 @@ def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.nd
     except Exception as e:
         raise Exception(f"Error computing base kernel: {e}")
 
+def compute_fiber_dist():
+    pass
 
 def compute_diffusion_matrix(state: HDMData, base_diffusion_mat: np.ndarray, row_nns: np.ndarray) -> sparse.csr_matrix:
     """Compute the diffusion matrix for HDM."""
     mat_row_idx = []
     mat_col_idx = []
     vals = []
-    
     for j in tqdm(range(state.num_data_samples), desc="Computing diffusion matrix"):
         for nns in range(base_diffusion_mat.shape[1]):
             if base_diffusion_mat[j, nns] == 0:
                 continue
             
             k = row_nns[j, nns]
-            map_matrix = state.maps[j, k]
+
+            coo = scipy.sparse.csr_matrix(distance_matrix(state.data_samples[j], state.data_samples[k])).tocoo()
+
+
+            """ Code for using maps """
+            #map_matrix = state.maps[j, k]
             
             # Forward mapping
-            coo = map_matrix.tocoo()
+            #coo = map_matrix.tocoo()
             mat_row_idx.extend(coo.row + state.cumulative_block_indices[j])
             mat_col_idx.extend(coo.col + state.cumulative_block_indices[k])
             vals.extend(base_diffusion_mat[j, nns] * coo.data)
             
             # Backward mapping (transposed)
-            coo = map_matrix.T.tocoo()
+            #coo = map_matrix.T.tocoo()
             mat_row_idx.extend(coo.row + state.cumulative_block_indices[k])
             mat_col_idx.extend(coo.col + state.cumulative_block_indices[j])
             vals.extend(base_diffusion_mat[j, nns] * coo.data)

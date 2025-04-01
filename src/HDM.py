@@ -34,7 +34,7 @@ def load_maps(map_path: str, num_data_samples: int, n) -> np.ndarray:
         raise Exception(f"Error loading map matrices: {e}")
 
 
-def _load_single_sample(data_samples_path, name_tuple):
+def _load_single_sample(data_samples_path, name_tuple) -> np.ndarray:
     name = name_tuple[0]
     path = os.path.join(data_samples_path, "ReparametrizedOFF", f"{name}.off")
     try:
@@ -45,7 +45,7 @@ def _load_single_sample(data_samples_path, name_tuple):
         print(f"Warning: Could not load {path}: {e}")
         return None
 
-def load_data_samples(data_samples_path, max_workers=1):
+def load_data_samples(data_samples_path, max_workers=1) -> list[np.ndarray]:
     try:
         names = os.listdir(data_samples_path)
 
@@ -81,9 +81,9 @@ def run_HDM(backend, hdm_config, hdm_data):
             return run_hdm_gpu(hdm_config, hdm_data)
         
           
+
 def HDM(
-    data_samples_path: str,
-    map_path: str,
+
     base_dist_path: str,
     # sparsity_param_base: float,
     # sparsity_param_fiber: float,
@@ -93,6 +93,11 @@ def HDM(
     #kernel_func_fiber: Callable[[np.ndarray, np.ndarray], np.float32],
     num_eigenvectors: int,
     subsample_mapping: float,
+    base_dist = None, # add type
+    data_samples_path: str = None,
+    data_samples: list[np.ndarray] = None, # add type or at least check that this type hinting is correct
+    map_path: str = None,
+    maps=None,
     backend: str = "CPU",):
     """
     DOCUMENTATION HERE!
@@ -102,8 +107,21 @@ def HDM(
         base_dist = loadmat(base_dist_path)["dists"]
     else:
         base_dist = None
-    data_samples = load_data_samples(data_samples_path, max_workers)
-    maps = load_maps(map_path, len(data_samples), len(data_samples.size(0)))
+        
+    if data_samples is None and data_samples_path is None:
+        raise ValueError("Either data_samples or data_samples_path must be provided.")
+    elif data_samples is not None and data_samples_path is not None:
+        raise ValueError("Only one of data_samples or data_samples_path must be provided. Otherwise it will be ambiguous.")
+    if data_samples_path is not None:
+        data_samples = load_data_samples(data_samples_path, max_workers)
+
+    if maps is None and map_path is None:
+        print("Warning: maps and map_path are both None. Using identity mapping.")
+    elif maps is not None and map_path is not None:
+        raise ValueError("Only one of maps or map_path must be provided. Otherwise it will be ambiguous.")
+    elif map_path is not None:
+        maps = load_maps(map_path, len(data_samples), len(data_samples.size(0)))
+        
     cumulative_block_indices = cumulative_indices(data_samples)
     
     hdm_config = HDMConfig(
@@ -111,7 +129,7 @@ def HDM(
         base_epsilon,
         num_eigenvectors,
     )
-    
+
     hdm_data = HDMData(
         data_samples,
         maps,
