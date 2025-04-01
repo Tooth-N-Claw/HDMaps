@@ -11,12 +11,31 @@ def symmetrize(matrix):
     return 0.5 * (matrix + matrix.T)
 
 
+
+def calculate_base_dist(hdm_data: HDMData) -> np.ndarray:
+    matrix_array = hdm_data.data_samples
+    n = len(hdm_data.data_samples)
+    distance_matrix = np.zeros((n, n))
+
+    for i in range(n):
+        distance_matrix[i, :] = np.linalg.norm(matrix_array - matrix_array[i], axis=(1, 2), ord='fro')
+
+    return distance_matrix
+
+
+
 def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.ndarray, np.ndarray]:
     """Compute the base kernel for diffusion maps."""
     try:
-        
-        s_dists = np.sort(hdm_data.base_dist, axis=1)
-        row_nns = np.argsort(hdm_data.base_dist, axis=1)
+        if hdm_data.base_dist is None:
+            print("hello")
+            bast_dist = calculate_base_dist(hdm_data)
+        else:
+            base_dist = hdm.base_dist
+            
+            
+        s_dists = np.sort(base_dist, axis=1)
+        row_nns = np.argsort(base_dist, axis=1)
         
         s_dists = s_dists[:, 1:hdm_config.num_neighbors+1]
         row_nns = row_nns[:, 1:hdm_config.num_neighbors+1]

@@ -11,12 +11,25 @@ from HDM_CPU import run_hdm_cpu
 from scipy.io import loadmat
 
 
-def load_maps(data_samples_path: str):
-    try:
-        maps = loadmat(data_samples_path)["softMapMatrix"]
+def load_maps(map_path: str, num_data_samples: int, n) -> np.ndarray:
+    try: 
+        if map_path is None:     
+            #create matrix, that contains num_data_samples*num_data_samples matrix, where each element contains the identity matrix that is of size n*n
+            maps = np.zeros((num_data_samples, num_data_samples, n, n), dtype=np.float32)
+            for i in range(num_data_samples):
+                for j in range(num_data_samples):
+                    if i == j:
+                        maps[i, j] = np.eye(n, dtype=np.float32)
+                    else:
+                        maps[i, j] = np.zeros((n, n), dtype=np.float32)
+            
+        else:
+            # maps = loadmat(map_path)["softMapMatrix"]
+            maps = np.load(map_path, allow_pickle=True)
+
         return maps
     except FileNotFoundError:
-        raise FileNotFoundError(f"Could not find softMapMatrix.mat in {data_samples_path}")
+        raise FileNotFoundError(f"Could not find softMapMatrix.mat in {map_path}")
     except Exception as e:
         raise Exception(f"Error loading map matrices: {e}")
 
@@ -25,7 +38,8 @@ def _load_single_sample(data_samples_path, name_tuple):
     name = name_tuple[0]
     path = os.path.join(data_samples_path, "ReparametrizedOFF", f"{name}.off")
     try:
-        vertices = trimesh.load(path).vertices
+        # vertices = trimesh.load(path).vertices
+        vertices = np.load(path)
         return vertices
     except Exception as e:
         print(f"Warning: Could not load {path}: {e}")
@@ -33,9 +47,8 @@ def _load_single_sample(data_samples_path, name_tuple):
 
 def load_data_samples(data_samples_path, max_workers=1):
     try:
-        names_path = os.path.join(data_samples_path, "Names.mat")
-        names = loadmat(names_path)["Names"]
-        
+        names = os.listdir(data_samples_path)
+
         data_samples = []
         
         # Use ProcessPoolExecutor for I/O bound operations
@@ -66,8 +79,8 @@ def run_HDM(backend, hdm_config, hdm_data):
             return run_hdm_cpu(hdm_config, hdm_data)
         case "GPU":
             return run_hdm_gpu(hdm_config, hdm_data)
-
-
+        
+          
 def HDM(
     data_samples_path: str,
     map_path: str,
@@ -80,15 +93,17 @@ def HDM(
     #kernel_func_fiber: Callable[[np.ndarray, np.ndarray], np.float32],
     num_eigenvectors: int,
     subsample_mapping: float,
-    backend: str = "GPU",):
+    backend: str = "CPU",):
     """
     DOCUMENTATION HERE!
     """
     max_workers = max(1, multiprocessing.cpu_count() - 1)
-
-    base_dist = loadmat(base_dist_path)["dists"]
+    if not base_dist_path == None:
+        base_dist = loadmat(base_dist_path)["dists"]
+    else:
+        base_dist = None
     data_samples = load_data_samples(data_samples_path, max_workers)
-    maps = load_maps(map_path)
+    maps = load_maps(map_path, len(data_samples), len(data_samples.size(0)))
     cumulative_block_indices = cumulative_indices(data_samples)
     
     hdm_config = HDMConfig(
@@ -100,7 +115,7 @@ def HDM(
     hdm_data = HDMData(
         data_samples,
         maps,
-        base_dist,
+        None,
         cumulative_block_indices,
         num_data_samples=len(data_samples),
     )

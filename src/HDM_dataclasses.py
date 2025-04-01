@@ -10,6 +10,7 @@ class HDMData:
     base_dist: any = None
     cumulative_block_indices: np.ndarray = None
     num_data_samples: int = 0
+    distance_func: str = "fro"
     
 @dataclass
 class HDMConfig:
