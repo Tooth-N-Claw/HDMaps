@@ -140,8 +140,9 @@ def HDM(
     )
     
     try:
-        embedding = run_HDM(backend, hdm_config, hdm_data)
-        visualize(embedding, data_sample_species)
+        diffusion_coords = run_HDM(backend, hdm_config, hdm_data)
+        return diffusion_coords
+        visualize(diffusion_coords, data_sample_species)
     except Exception as e:
         print(f"Error running HDM: {e}")
 

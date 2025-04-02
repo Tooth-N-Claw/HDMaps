@@ -1,4 +1,5 @@
 from HDM import HDM
+from visualize import visualize
 import numpy as np
 import os
 
@@ -24,7 +25,7 @@ for filename in txt_files:
 
 data_samples = [mat[:6] for mat in data_samples]  
 if __name__ == "__main__":
-    HDM(
+    diffusion_coords = HDM(
         data_samples=data_samples,
         maps=None,
         base_dist_path=None,
@@ -32,5 +33,5 @@ if __name__ == "__main__":
         base_epsilon=0.04,
         num_eigenvectors=4,
         subsample_mapping=0.1,
-        data_sample_species=data_sample_species,
     )
+    visualize(diffusion_coords, data_sample_species)
