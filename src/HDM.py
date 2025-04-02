@@ -98,6 +98,7 @@ def HDM(
     data_samples: list[np.ndarray] = None, # add type or at least check that this type hinting is correct
     map_path: str = None,
     maps=None,
+    data_sample_species: list[str] = None,
     backend: str = "CPU",):
     """
     DOCUMENTATION HERE!
@@ -138,10 +139,9 @@ def HDM(
         num_data_samples=len(data_samples),
     )
     
-    
     try:
         embedding = run_HDM(backend, hdm_config, hdm_data)
-        visualize(embedding)
+        visualize(embedding, data_sample_species)
     except Exception as e:
         print(f"Error running HDM: {e}")
 
