@@ -1,5 +1,8 @@
 from HDM import HDM
+from mds_embed import embed_plot
+from scipy.spatial.distance import pdist, squareform
 from visualize import visualize
+from scipy.spatial import distance_matrix
 import numpy as np
 import os
 
@@ -31,7 +34,10 @@ if __name__ == "__main__":
         base_dist_path=None,
         num_neighbors=4,
         base_epsilon=0.04,
-        num_eigenvectors=4,
+        num_eigenvectors=10,
         subsample_mapping=0.1,
     )
-    visualize(diffusion_coords, data_sample_species)
+    dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
+    print("compute dist")
+    embed_plot(dist_mat)
+    visualize(diffusion_coords[:, :4], data_sample_species)
