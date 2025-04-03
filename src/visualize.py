@@ -137,7 +137,7 @@ def shira_visualize(fig_folder, embedding, species_labels, title_suffix="Species
     plt.savefig(os.path.join(fig_folder, f"mds_embedding_{title_suffix.lower()}.png"), dpi=300)
     plt.show()
 
-def visualize(points: np.ndarray, fig_folder, data_samples_types: list[str] = None) -> None:
+def visualize(points: np.ndarray, data_samples_types: list[str] = None) -> None:
     print(points.shape)
     print(len(data_samples_types) if data_samples_types else "No labels provided")
     
@@ -171,7 +171,7 @@ def visualize(points: np.ndarray, fig_folder, data_samples_types: list[str] = No
         plotter.add_legend(legend_entries, bcolor=(0, 0, 0))  # White background
     else:
         plotter.add_mesh(point_cloud, color="red", point_size=5, render_points_as_spheres=True)
-    plotter.save_graphic(os.path.join(fig_folder, "3d_plot.pdf"))
+    # plotter.save_graphic(os.path.join(fig_folder, "3d_plot.pdf"))
 
     plotter.show()
     # save the plot
