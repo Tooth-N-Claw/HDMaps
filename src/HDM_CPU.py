@@ -114,6 +114,7 @@ def compute_diffusion_matrix(state: HDMData, base_diffusion_mat: np.ndarray, row
 def compute_horizontal_diffusion_laplacian(diffusion_matrix: sparse.csr_matrix) -> tuple[sparse.csr_matrix, sparse.csr_matrix]:
     """Compute the horizontal diffusion Laplacian."""
     # Compute row sums and check for zeros
+    print((diffusion_matrix.data < 0).any())
     row_sums = np.sum(diffusion_matrix, axis=1).A1
     if np.any(row_sums == 0):
         print("Warning: Zero row sums detected in diffusion matrix")
@@ -123,10 +124,13 @@ def compute_horizontal_diffusion_laplacian(diffusion_matrix: sparse.csr_matrix) 
     sqrt_diag = sparse.diags(1.0 / np.sqrt(row_sums), 0)
     
     # Compute normalized Laplacian
+
+    # horizontal_diffusion_laplacian = sparse.eye(diffusion_matrix.shape[0]) - sqrt_diag @ diffusion_matrix @ sqrt_diag
     horizontal_diffusion_laplacian = sqrt_diag @ diffusion_matrix @ sqrt_diag
     
     # Ensure symmetry
     horizontal_diffusion_laplacian = symmetrize(horizontal_diffusion_laplacian)
+    # print((horizontal_diffusion_laplacian.data < 0).any())
     
     return horizontal_diffusion_laplacian, sqrt_diag
 
@@ -138,8 +142,8 @@ def eigendecomposition(matrix: sparse.csr_matrix, num_eigenvectors: int) -> tupl
             matrix, 
             k=num_eigenvectors, 
             which="LM", 
-            maxiter=5000, 
-            tol=1e-10
+            # maxiter=5000, 
+            # tol=1e-10
         )
         
         # Sort in descending order
@@ -173,10 +177,13 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
             raise ValueError("Empty diffusion matrix created. Check previous steps.")
         
         horizontal_diffusion_laplacian, sqrt_diag = compute_horizontal_diffusion_laplacian(diffusion_matrix)
+        # print(np.allclose(horizontal_diffusion_laplacian, horizontal_diffusion_laplacian.T))
         print("Computed horizontal diffusion Laplacian")
+        # print(sqrt_diag)
         
         eigvals, eigvecs = eigendecomposition(horizontal_diffusion_laplacian, hdm_config.num_eigenvectors)
         print("Eigendecomposition done")
+        # print(eigvals)
          
         # Handle potential numerical issues
         inf_values = np.sum(np.isinf(sqrt_diag.data))
@@ -185,6 +192,8 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
             sqrt_diag.data[np.isinf(sqrt_diag.data)] = 0
         
         bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
+        # eigvals = np.maximum(eigvals, 1e-12)  # Clip negative values to near-zero
+        sqrt_lambda = sparse.diags(np.sqrt(eigvals[1:]), 0)
         sqrt_lambda = sparse.diags(np.sqrt(eigvals[1:]), 0)
         bundle_HDM_full = bundle_HDM @ sqrt_lambda
         

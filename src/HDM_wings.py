@@ -7,8 +7,8 @@ import numpy as np
 import os
 
 
-# directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
-directory_path = 'data/aligned_landmarks'
+directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
+# directory_path = 'data/aligned_landmarks'
 
 txt_files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
 
@@ -27,6 +27,8 @@ for filename in txt_files:
         exit(1)    
 
 data_samples = [mat[:6] for mat in data_samples]  
+
+
 if __name__ == "__main__":
     diffusion_coords = HDM(
         data_samples=data_samples,
@@ -34,10 +36,10 @@ if __name__ == "__main__":
         base_dist_path=None,
         num_neighbors=4,
         base_epsilon=0.04,
-        num_eigenvectors=4,
+        num_eigenvectors=10,
         subsample_mapping=0.1,
     )
     dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
     print("compute dist")
     # embed_plot(dist_mat)
-    visualize(diffusion_coords[:, :4], data_sample_species)
+    visualize(diffusion_coords[:, :3], data_sample_species)

@@ -24,7 +24,7 @@ def visualize(points: np.ndarray, data_samples_types: list[str] = None) -> None:
         cmap = cm.get_cmap("rainbow", num_species)
         norm = Normalize(vmin=0, vmax=num_species-1)
         
-        plotter.add_mesh(point_cloud, scalars="species", point_size=5, 
+        plotter.add_mesh(point_cloud, scalars="species", point_size=10, 
                          render_points_as_spheres=True, cmap="rainbow", 
                          clim=[0, num_species-1], show_scalar_bar=False)
         

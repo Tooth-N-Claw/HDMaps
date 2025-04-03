@@ -1,9 +1,11 @@
 import os
 import numpy as np
-from scipy.linalg import orthogonal_procrustes
 from sklearn.decomposition import PCA
+from scipy.linalg import orthogonal_procrustes
+from scipy.spatial import procrustes
+import matplotlib.pyplot as plt
 
-# Load data
+
 directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
 output_directory = 'data/aligned_landmarks'
 os.makedirs(output_directory, exist_ok=True)
@@ -16,61 +18,57 @@ for file_name in txt_files:
     input_file_path = os.path.join(directory_path, file_name)
 
     try:
-        matrix = np.loadtxt(input_file_path, delimiter=',')  # Load landmark coordinates
-        data_samples.append(matrix[6:, :])  # Extract first 6 points (assuming rows are points, cols are x,y)
+        sample = np.loadtxt(input_file_path, delimiter=',')  # Load landmark coordinates
+        output_file_path = os.path.join(output_directory, file_name)
+        sample_top = sample[:6, :]
+        data_samples.append(sample_top)  # Extract first 6 points (assuming rows are points, cols are x,y)
         file_names.append(file_name)
     except Exception as e:
         print(f"Error loading {input_file_path}: {e}")
         exit(1)
 
-# Define anchor sample
-anchor = data_samples[0]
 
-# Perform PCA on the anchor
-pca_anchor = PCA(n_components=2)
-anchor_pca = pca_anchor.fit_transform(anchor)
+def center(sample):
+    centroid = np.mean(sample, axis=0)
+    return sample - centroid
 
-# Center the anchor points
-anchor_pca -= np.mean(anchor_pca, axis=0)
 
-# Find the longest eigenvector for scaling reference
-anchor_cov = np.cov(anchor_pca.T)  # Covariance matrix
-anchor_eigenvalues, anchor_eigenvectors = np.linalg.eig(anchor_cov)
-sorted_indices = np.argsort(anchor_eigenvalues)[::-1]  # Sort in descending order
-anchor_main_vector = anchor_eigenvectors[:, sorted_indices[0]]  # Longest eigenvector
-anchor_scale = np.linalg.norm(anchor_main_vector)  # Scale = length of this vector
+def rescale(sample):
+    n = len(sample)
+    cov_mat = (1/(n-1))*sample.T@sample
+    eigvals = np.linalg.eigvals(cov_mat)
+    return sample * (1 / np.max(eigvals))
 
-aligned_samples = []
-for sample, file_name in zip(data_samples, file_names):
-    # Perform PCA
-    pca_sample = PCA(n_components=2).fit_transform(sample)
 
-    # Center the sample
-    pca_sample -= np.mean(pca_sample, axis=0)
+def align(anchor, sample):
+    R, _ = orthogonal_procrustes(sample, anchor)
+    return sample @ R
 
-    # Compute eigenvectors for the sample
-    sample_cov = np.cov(pca_sample.T)
-    sample_eigenvalues, sample_eigenvectors = np.linalg.eig(sample_cov)
 
-    # Ensure consistent eigenvector selection
-    sorted_indices = np.argsort(sample_eigenvalues)[::-1]  # Sort in descending order
-    main_vector = sample_eigenvectors[:, sorted_indices[0]]
-    sample_scale = np.linalg.norm(main_vector)
+centered_data_samples = [center(sample) for sample in data_samples]
+rescaled_data_samples = [rescale(sample) for sample in centered_data_samples]
 
-    # Normalize so that the longest eigenvector has length 1
-    normalized_sample = pca_sample / sample_scale  
+anchor = rescaled_data_samples[0]
 
-    # Align using Orthogonal Procrustes Analysis
-    R, _ = orthogonal_procrustes(normalized_sample, anchor_pca)
-    aligned_sample = normalized_sample @ R  # Apply rotation
+aligned_data_samples = [anchor] + [align(anchor, sample) for sample in rescaled_data_samples[1:]]
 
-    aligned_samples.append(aligned_sample)
 
-    # Save output
+def plot(data_samples1, data_samples2):
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    
+    for ax, data_samples in zip(axs, [data_samples1, data_samples2]):
+        for i in range(100):
+            pt_size = 5
+            ax.scatter(data_samples[i][:, 0], data_samples[i][:, 1], s=pt_size)
+        ax.set_title('Data Plot')
+
+    plt.tight_layout()  # Adjust spacing between subplots
+    plt.show()
+
+plot(aligned_data_samples, data_samples)
+
+
+for aligned_sample, file_name in zip(aligned_data_samples, file_names):
     output_file_path = os.path.join(output_directory, file_name)
     np.savetxt(output_file_path, aligned_sample, delimiter=',')
     print(f"Saved: {output_file_path}")
-
-print(file_names[:2])
-print(data_samples[:2])
-print(aligned_samples[:2])
