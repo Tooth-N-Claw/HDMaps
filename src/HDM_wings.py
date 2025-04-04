@@ -1,29 +1,41 @@
 from HDM import HDM
 from mds_embed import embed_plot
 from scipy.spatial.distance import pdist, squareform
-from visualize import visualize
+from visualize import plot_embedding_3d
 from scipy.spatial import distance_matrix
 import numpy as np
 import os
 
+TOTAL_SUB_SAMPLES = 300
+
 def take_samples(txt_files, directory_path):
     data_samples = []
-    data_sample_species = []
+    metadata = []
     for filename in txt_files:
         input_file_path = os.path.join(directory_path, filename) 
         try:
             matrix = np.loadtxt(input_file_path, delimiter=',')
             data_samples.append(matrix)
-            species = filename.split('_')[1]
+            meta = parse_metadata(filename)
             for i in range(6):
-                data_sample_species.append(species)
+                metadata.append(meta)
         except Exception as e:
             print(f"Error loading {input_file_path}: {e}")
             exit(1)    
 
     data_samples = [mat[:6] for mat in data_samples] 
-    return data_samples, data_sample_species 
-    
+    return data_samples, metadata 
+  
+def parse_metadata(file_name):
+    meta = {}
+    parts = file_name.split("_")
+    meta['group'] = parts[0]
+    meta['species'] = parts[1]
+    meta['temp'] = parts[2]
+    meta['sex'] = parts[3]
+    meta['id'] = parts[4]
+    meta['side'] = parts[5].split(".")[0]  # Remove file extension
+    return meta  
 
 def random_subsamples(txt_files):
     species = {f.split('_')[1] for f in txt_files}
@@ -40,9 +52,9 @@ directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmark
 
 txt_files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
 
-# random_files = random_subsamples(txt_files)
+random_files = random_subsamples(txt_files)
 
-data_samples, data_sample_species = take_samples(txt_files, directory_path)
+data_samples, metadata = take_samples(random_files, directory_path)
 
 
 data_samples = [mat[:6] for mat in data_samples]  
@@ -60,7 +72,7 @@ if __name__ == "__main__":
     )
     dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
     print("compute dist")
-    # embed_plot(dist_mat)
-    visualize(diffusion_coords[:, :3], data_sample_species)
-    # embed_plot(dist_mat, "data/figures/hdm", data_sample_species)
-    # visualize(diffusion_coords[:, :4], data_sample_species)
+    # compute pairwise distances use frobenius norm
+
+    points = embed_plot(dist_mat)
+    plot_embedding_3d(points, metadata, color_key="species")
