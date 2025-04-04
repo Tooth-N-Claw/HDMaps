@@ -9,15 +9,16 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from mds_embed import embed_plot
 
-folder_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
+hdm_folder_path = 'data/embedded'
+folder_path = 'data/aligned_landmarks'
 
 
 def load_point_cloud(file_path):
     points = []
     with open(file_path, 'r') as f:
         for line in f:
-            x, y = map(float, line.strip().split(','))
-            points.append((x, y))
+            point = np.loadtxt(line.strip().split(","))
+            points.append(point)
     #return np.array(points)
     return np.array(points[:6])
 
@@ -185,7 +186,7 @@ fig_folder = "data/wings/figures"
 
 
 plot_embedding(fig_folder, eigvecs[:, 1:3], metadata, color_key="species", filename="diffusion_species_2d.png")
-# plot_embedding_3d( eigvecs[:, 1:4], metadata, color_key="species")
+plot_embedding_3d( eigvecs[:, 1:4], metadata, color_key="species")
 
 # points = embed_plot(eigvecs[:, 1:3])
 # plot_embedding(points, metadata, color_key="species", filename="mds_diffusion_species_2d.png")

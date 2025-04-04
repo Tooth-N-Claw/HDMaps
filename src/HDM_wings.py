@@ -73,6 +73,8 @@ if __name__ == "__main__":
     dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
     print("compute dist")
     # compute pairwise distances use frobenius norm
+    
+    
 
-    points = embed_plot(dist_mat)
-    plot_embedding_3d(points, metadata, color_key="species")
+    # points = embed_plot(dist_mat)
+    # plot_embedding_3d(points, metadata, color_key="species")
