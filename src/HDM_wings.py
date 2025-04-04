@@ -35,8 +35,8 @@ def random_subsamples(txt_files):
     return random_files
 
 
-directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
-# directory_path = 'data/aligned_landmarks'
+# directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
+directory_path = 'data/aligned_landmarks'
 
 txt_files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
 

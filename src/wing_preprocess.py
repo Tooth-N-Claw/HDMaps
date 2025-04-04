@@ -33,11 +33,21 @@ def center(sample):
     return sample - centroid
 
 
+# def rescale(sample):
+#     n = len(sample)
+#     cov_mat = (1/(n-1))*sample.T@sample
+#     eigvals = np.linalg.eigvals(cov_mat)
+#     return sample * (1 / np.max(eigvals))
+
+
 def rescale(sample):
-    n = len(sample)
-    cov_mat = (1/(n-1))*sample.T@sample
-    eigvals = np.linalg.eigvals(cov_mat)
-    return sample * (1 / np.max(eigvals))
+    # Compute the pairwise distances
+    from scipy.spatial.distance import pdist
+
+    distances = pdist(sample, metric='euclidean')
+    diameter = np.max(distances)  # Maximum pairwise distance
+
+    return sample / diameter if diameter != 0 else sample
 
 
 def align(anchor, sample):
@@ -53,19 +63,29 @@ anchor = rescaled_data_samples[0]
 aligned_data_samples = [anchor] + [align(anchor, sample) for sample in rescaled_data_samples[1:]]
 
 
+
 def plot(data_samples1, data_samples2):
     fig, axs = plt.subplots(1, 2, figsize=(10, 5))
     
-    for ax, data_samples in zip(axs, [data_samples1, data_samples2]):
-        for i in range(100):
-            pt_size = 5
-            ax.scatter(data_samples[i][:, 0], data_samples[i][:, 1], s=pt_size)
-        ax.set_title('Data Plot')
+    # Plot first dataset
+    for i in range(100):
+        pt_size = 5
+        axs[0].scatter(data_samples1[i][:, 0], data_samples1[i][:, 1], s=pt_size)
+    axs[0].set_title('Landmakrs aligned by aligning all points')
+    axs[0].set_xlabel('Feature 1')
+    axs[0].set_ylabel('Feature 2')
+    
+    for i in range(100):
+        pt_size = 5
+        axs[1].scatter(data_samples2[i][:, 0], data_samples2[i][:, 1], s=pt_size)
+    axs[1].set_title('Landmarks aligned by aligning landmarks (new alignment)')
+    axs[1].set_xlabel('Feature 1')
+    axs[1].set_ylabel('Feature 2')
 
-    plt.tight_layout()  # Adjust spacing between subplots
+    plt.tight_layout()
     plt.show()
 
-plot(aligned_data_samples, data_samples)
+plot(data_samples, aligned_data_samples)
 
 
 for aligned_sample, file_name in zip(aligned_data_samples, file_names):
