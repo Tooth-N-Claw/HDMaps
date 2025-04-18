@@ -5,10 +5,10 @@ import numpy as np
 @dataclass
 class HDMData:
     """State and intermediate data for Horizontal Diffusion Maps algorithm."""
-    data_samples: list[np.ndarray] = None
+    data_samples: any = None
     maps: any = None
     base_dist: any = None
-    cumulative_block_indices: np.ndarray = None
+    cumulative_block_indices: any = None
     num_data_samples: int = 0
 
     
