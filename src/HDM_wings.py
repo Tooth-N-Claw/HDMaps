@@ -1,12 +1,13 @@
 from HDM import HDM
 from mds_embed import embed_plot
 from scipy.spatial.distance import pdist, squareform
-from visualize import plot_embedding_3d
+from visualize import plot_embedding_3d, visualize
 from scipy.spatial import distance_matrix
 import numpy as np
 import os
 
 TOTAL_SUB_SAMPLES = 300
+SUBSAMPLE = False
 
 def take_samples(txt_files, directory_path):
     data_samples = []
@@ -25,6 +26,7 @@ def take_samples(txt_files, directory_path):
 
     data_samples = [mat[:6] for mat in data_samples] 
     return data_samples, metadata 
+
   
 def parse_metadata(file_name):
     meta = {}
@@ -50,11 +52,13 @@ def random_subsamples(txt_files):
 # directory_path = 'data/v3 Landmarks_and_centroids and intersection_1500/Landmarks'
 directory_path = 'data/aligned_landmarks'
 
-txt_files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
+files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
 
-random_files = random_subsamples(txt_files)
+if SUBSAMPLE == True:
+    files = random_subsamples(txt_files)
+    
 
-data_samples, metadata = take_samples(random_files, directory_path)
+data_samples, metadata = take_samples(files, directory_path)
 
 
 data_samples = [mat[:6] for mat in data_samples]  
@@ -70,11 +74,11 @@ if __name__ == "__main__":
         num_eigenvectors=10,
         subsample_mapping=0.1,
     )
-    dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
-    print("compute dist")
-    # compute pairwise distances use frobenius norm
+    # dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
+    # print("compute dist")
     
-    
+    species = [me["species"] for me in metadata]
+    visualize(diffusion_coords[:, :3], species)
 
     # points = embed_plot(dist_mat)
     # plot_embedding_3d(points, metadata, color_key="species")
