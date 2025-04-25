@@ -7,13 +7,15 @@ from tqdm import tqdm
 from HDM_dataclasses import HDMConfig, HDMData
 from scipy.spatial import distance_matrix
 
+
+
 def symmetrize(matrix):
     """Symmetrize a matrix."""
     return 0.5 * (matrix + matrix.T)
 
 
 
-def calculate_base_dist(hdm_data: HDMData) -> np.ndarray:
+def compute_base_dist(hdm_data: HDMData) -> np.ndarray:
     matrix_array = hdm_data.data_samples
     n = len(hdm_data.data_samples)
     distance_matrix = np.zeros((n, n))
@@ -24,12 +26,11 @@ def calculate_base_dist(hdm_data: HDMData) -> np.ndarray:
     return distance_matrix
 
 
-
 def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.ndarray, np.ndarray]:
     """Compute the base kernel for diffusion maps."""
     try:
         if HDMData.base_dist is None:
-            base_dist = calculate_base_dist(hdm_data)
+            base_dist = compute_base_dist(hdm_data)
         else:
             base_dist = HDMData.base_dist
             
@@ -39,6 +40,8 @@ def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.nd
         
         s_dists = s_dists[:, 1:hdm_config.num_neighbors+1]
         row_nns = row_nns[:, 1:hdm_config.num_neighbors+1]
+        # dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
+        # print("compute dist")
         
         rows = np.repeat(np.arange(hdm_data.num_data_samples).reshape(-1, 1), 
                         hdm_config.num_neighbors, axis=1).flatten()
@@ -62,46 +65,59 @@ def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.nd
         
         # Apply kernel function
         s_dists = np.exp(-np.square(s_dists) / hdm_config.base_epsilon)
+
+        print(np.mean(s_dists.flatten()))
         
         return s_dists, row_nns
     except Exception as e:
         raise Exception(f"Error computing base kernel: {e}")
 
-def compute_fiber_dist():
-    pass
 
-def compute_diffusion_matrix(state: HDMData, base_diffusion_mat: np.ndarray, row_nns: np.ndarray) -> sparse.csr_matrix:
+def compute_fiber_kernel(hdm_data: HDMData, hdm_config: HDMConfig, j, k):
+    # TODO: Add different distance metrics
+    coo = scipy.sparse.csr_matrix(distance_matrix(hdm_data.data_samples[j], hdm_data.data_samples[k])).tocoo()
+    coo.data  = np.exp(-coo.data**2 / hdm_config.fiber_epsilon)
+    return coo
+
+
+def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diffusion_mat: np.ndarray, row_nns: np.ndarray) -> sparse.csr_matrix:
     """Compute the diffusion matrix for HDM."""
     mat_row_idx = []
     mat_col_idx = []
     vals = []
-    for j in tqdm(range(state.num_data_samples), desc="Computing diffusion matrix"):
+    for j in tqdm(range(hdm_data.num_data_samples), desc="Computing diffusion matrix"):
         for nns in range(base_diffusion_mat.shape[1]):
             if base_diffusion_mat[j, nns] == 0:
                 continue
             
             k = row_nns[j, nns]
 
-            coo = scipy.sparse.csr_matrix(distance_matrix(state.data_samples[j], state.data_samples[k])).tocoo()
-
+            # Compute fiber kernel
+            if hdm_config.calculate_fiber_kernel:
+                coo = compute_fiber_kernel(hdm_data, hdm_config, j, k)
+            else:
+                map_matrix = hdm_data.maps[j, k]
+                coo = map_matrix.tocoo()
+                
+                
 
             """ Code for using maps """
-            #map_matrix = state.maps[j, k]
+            
             
             # Forward mapping
-            #coo = map_matrix.tocoo()
-            mat_row_idx.extend(coo.row + state.cumulative_block_indices[j])
-            mat_col_idx.extend(coo.col + state.cumulative_block_indices[k])
+            
+            mat_row_idx.extend(coo.row + hdm_data.cumulative_block_indices[j])
+            mat_col_idx.extend(coo.col + hdm_data.cumulative_block_indices[k])
             vals.extend(base_diffusion_mat[j, nns] * coo.data)
             
             # Backward mapping (transposed)
             #coo = map_matrix.T.tocoo()
-            mat_row_idx.extend(coo.row + state.cumulative_block_indices[k])
-            mat_col_idx.extend(coo.col + state.cumulative_block_indices[j])
+            mat_row_idx.extend(coo.row + hdm_data.cumulative_block_indices[k])
+            mat_col_idx.extend(coo.col + hdm_data.cumulative_block_indices[j])
             vals.extend(base_diffusion_mat[j, nns] * coo.data)
     
     # Determine proper dimensions for the matrix
-    total_size = state.cumulative_block_indices[-1]
+    total_size = hdm_data.cumulative_block_indices[-1]
     
     diffusion_matrix = sparse.csr_matrix(
         (vals, (mat_row_idx, mat_col_idx)), 
@@ -114,7 +130,6 @@ def compute_diffusion_matrix(state: HDMData, base_diffusion_mat: np.ndarray, row
 def compute_horizontal_diffusion_laplacian(diffusion_matrix: sparse.csr_matrix) -> tuple[sparse.csr_matrix, sparse.csr_matrix]:
     """Compute the horizontal diffusion Laplacian."""
     # Compute row sums and check for zeros
-    print((diffusion_matrix.data < 0).any())
     row_sums = np.sum(diffusion_matrix, axis=1).A1
     if np.any(row_sums == 0):
         print("Warning: Zero row sums detected in diffusion matrix")
@@ -170,7 +185,7 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         base_diffusion_matrix, row_nns = compute_base_kernel(hdm_config, hdm_data)
         print("Computed base kernel")
         
-        diffusion_matrix = compute_diffusion_matrix(hdm_data, base_diffusion_matrix, row_nns)
+        diffusion_matrix = compute_diffusion_matrix(hdm_data, hdm_config, base_diffusion_matrix, row_nns)
         print("Computed diffusion matrix")
         
         if diffusion_matrix.shape[0] == 0 or diffusion_matrix.nnz == 0:

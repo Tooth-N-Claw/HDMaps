@@ -39,6 +39,7 @@ def parse_metadata(file_name):
     meta['side'] = parts[5].split(".")[0]  # Remove file extension
     return meta  
 
+
 def random_subsamples(txt_files):
     species = {f.split('_')[1] for f in txt_files}
 
@@ -68,11 +69,12 @@ if __name__ == "__main__":
     diffusion_coords = HDM(
         data_samples=data_samples,
         maps=None,
-        base_dist_path=None,
         num_neighbors=4,
-        base_epsilon=0.04,
+        base_epsilon=0.9944363941697287,
+        fiber_epsilon=0.08,
         num_eigenvectors=10,
         subsample_mapping=0.1,
+        calculate_fiber_kernel=True,
     )
     # dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
     # print("compute dist")
