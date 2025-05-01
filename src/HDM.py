@@ -5,8 +5,7 @@ from HDM_dataclasses import HDMConfig, HDMData
 import numpy as np
 from tqdm import tqdm
 import trimesh
-from HDM_GPU import run_hdm_gpu
-from HDM_CPU import run_hdm_cpu
+
 from scipy.io import loadmat
 
 
@@ -22,8 +21,10 @@ def cumulative_indices(data_samples: list) -> np.ndarray:
 def run_HDM(backend, hdm_config, hdm_data):
     match backend:
         case "CPU":
+            from HDM_CPU import run_hdm_cpu 
             return run_hdm_cpu(hdm_config, hdm_data)
         case "GPU":
+            from HDM_GPU import run_hdm_gpu # import here to avoid torch being loaded unnecessarily, meaning you can run the code without having torch installed
             return run_hdm_gpu(hdm_config, hdm_data)
         
           
@@ -68,7 +69,7 @@ def HDM(
     hdm_data = HDMData(
         data_samples,
         maps,
-        None,
+        base_dist,
         cumulative_block_indices,
         num_data_samples=len(data_samples),
     )

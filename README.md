@@ -1,5 +1,12 @@
 # HDM_Python
 
+# Setup
+
+- Install requirements with `pip install -r requirements.txt`
+- If running on gpu, then install pytorch
+
+# Running HDM on platyrrhine teeth
+
 In order to run, add the data prepared by Rob. The data directory should be inside HDM_Python, and needs to be named "platyrrhine".
 The platyrrhine folder should contain:
 
@@ -8,7 +15,7 @@ The platyrrhine folder should contain:
 - softMapMatrix.mat
 - ReparametrizedOFF with the .off files inside.
 
-By running HDM.py from within the src folder, you should get the pringle below.
+By running `python src/HDM_teeth_CPU.py` from within the src folder, you should get the pringle below.
 
 Proof of Concept Pringle (PCP):
 

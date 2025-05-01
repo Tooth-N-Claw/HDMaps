@@ -11,6 +11,8 @@ import trimesh
 from HDM import HDM
 from scipy.io import loadmat
 
+from visualize import visualize
+
 
 
 def load_maps(data_samples_path: str):
@@ -47,10 +49,11 @@ maps = load_maps("platyrrhine/softMapMatrix.mat")
 base_dist =  loadmat("platyrrhine/FinalDists.mat")["dists"]
 
 
-HDM(
+points = HDM(
     data_samples=data_samples,
     maps=maps,
     base_dist=base_dist,
+    fiber_epsilon=0.08,
     # sparsity_param_base=0.04,
     # sparsity_param_fiber=1e-3,
     num_neighbors=4,
@@ -59,4 +62,8 @@ HDM(
     #kernel_func_fiber=HDM_CPU.kernel_func_fiber,
     num_eigenvectors=4,
     subsample_mapping=0.1,
+    calculate_fiber_kernel=False,
+    backend="CPU",
 )
+
+visualize(points)

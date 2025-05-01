@@ -66,7 +66,6 @@ def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.nd
         # Apply kernel function
         s_dists = np.exp(-np.square(s_dists) / hdm_config.base_epsilon)
 
-        print(np.mean(s_dists.flatten()))
         
         return s_dists, row_nns
     except Exception as e:
@@ -208,7 +207,6 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         
         bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
         # eigvals = np.maximum(eigvals, 1e-12)  # Clip negative values to near-zero
-        sqrt_lambda = sparse.diags(np.sqrt(eigvals[1:]), 0)
         sqrt_lambda = sparse.diags(np.sqrt(eigvals[1:]), 0)
         bundle_HDM_full = bundle_HDM @ sqrt_lambda
         
