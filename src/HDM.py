@@ -30,11 +30,11 @@ def HDM(
     # sparsity_param_fiber: float,
     num_neighbors: int,
     base_epsilon: float,
-    fiber_epsilon: float,
     #kernel_func_base: Callable[[np.ndarray, np.ndarray], np.float32],
     #kernel_func_fiber: Callable[[np.ndarray, np.ndarray], np.float32],
     num_eigenvectors: int,
     subsample_mapping: float,
+    fiber_epsilon: float = None,
     calculate_fiber_kernel: bool = True, # TODO: this argument is only meant to be here temporarily
     base_dist = None, # add type
     data_samples: list[np.ndarray] = None, # add type or at least check that this type hinting is correct

@@ -94,7 +94,6 @@ def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diff
 
             # Compute fiber kernel
             if hdm_config.calculate_fiber_kernel:
-                print(f"Computing fiber kernel for {j} and {k}")
                 coo = compute_fiber_kernel(hdm_data, hdm_config, j, k)
             else:
                 map_matrix = hdm_data.maps[j, k]
@@ -112,7 +111,7 @@ def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diff
             vals.extend(base_diffusion_mat[j, nns] * coo.data)
             
             # Backward mapping (transposed)
-            #coo = map_matrix.T.tocoo()
+            coo = coo.transpose()
             mat_row_idx.extend(coo.row + hdm_data.cumulative_block_indices[k])
             mat_col_idx.extend(coo.col + hdm_data.cumulative_block_indices[j])
             vals.extend(base_diffusion_mat[j, nns] * coo.data)
@@ -158,8 +157,8 @@ def eigendecomposition(matrix: sparse.csr_matrix, num_eigenvectors: int) -> tupl
             matrix, 
             k=num_eigenvectors, 
             which="LM", 
-            # maxiter=5000, 
-            # tol=1e-10
+            maxiter=5000, 
+            tol=1e-10
         )
         
         # Sort in descending order

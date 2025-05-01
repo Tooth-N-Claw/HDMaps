@@ -65,7 +65,6 @@ points = HDM(
     data_samples=data_samples,
     maps=maps,
     base_dist=base_dist,
-    fiber_epsilon=0.08,
     # sparsity_param_base=0.04,
     # sparsity_param_fiber=1e-3,
     num_neighbors=4,
