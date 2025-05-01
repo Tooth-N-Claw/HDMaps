@@ -1,12 +1,7 @@
-from concurrent.futures import ProcessPoolExecutor
-import multiprocessing
-import os
 from HDM_dataclasses import HDMConfig, HDMData
 import numpy as np
-from tqdm import tqdm
-import trimesh
 
-from scipy.io import loadmat
+
 
 
     
@@ -21,6 +16,7 @@ def cumulative_indices(data_samples: list) -> np.ndarray:
 def run_HDM(backend, hdm_config, hdm_data):
     match backend:
         case "CPU":
+            print("Running HDM on CPU")
             from HDM_CPU import run_hdm_cpu 
             return run_hdm_cpu(hdm_config, hdm_data)
         case "GPU":
@@ -47,7 +43,6 @@ def HDM(
     """
     DOCUMENTATION HERE!
     """
-    max_workers = max(1, multiprocessing.cpu_count() - 1)
 
         
     if data_samples is None:

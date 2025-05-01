@@ -30,6 +30,7 @@ def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.nd
     """Compute the base kernel for diffusion maps."""
     try:
         if HDMData.base_dist is None:
+            print("Computing base distances")
             base_dist = compute_base_dist(hdm_data)
         else:
             base_dist = HDMData.base_dist
@@ -93,6 +94,7 @@ def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diff
 
             # Compute fiber kernel
             if hdm_config.calculate_fiber_kernel:
+                print(f"Computing fiber kernel for {j} and {k}")
                 coo = compute_fiber_kernel(hdm_data, hdm_config, j, k)
             else:
                 map_matrix = hdm_data.maps[j, k]

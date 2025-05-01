@@ -4,6 +4,7 @@
 
 
 from concurrent.futures import ProcessPoolExecutor
+import multiprocessing
 import os
 
 from tqdm import tqdm
@@ -13,8 +14,6 @@ from scipy.io import loadmat
 
 from visualize import visualize
 
-
-
 def load_maps(data_samples_path: str):
     try:
         maps = loadmat(data_samples_path)["softMapMatrix"]
@@ -23,6 +22,7 @@ def load_maps(data_samples_path: str):
         raise FileNotFoundError(f"Could not find softMapMatrix.mat in {data_samples_path}")
     except Exception as e:
         raise Exception(f"Error loading map matrices: {e}")
+
 
 def _load_single_sample(data_samples_path, name_tuple):
     name = name_tuple[0]
@@ -39,15 +39,33 @@ def load_data_samples(data_samples_path, max_workers=1):
         names_path = os.path.join(data_samples_path, "Names.mat")
         names = loadmat(names_path)["Names"]
         
-        data_samples = [_load_single_sample(data_samples_path, name) for name in names[0]]
+        data_samples = []
+        
+        # Use ProcessPoolExecutor for I/O bound operations
+        with ProcessPoolExecutor(max_workers) as executor:
+            futures = [executor.submit(_load_single_sample, data_samples_path, name) for name in names[0]]
+            
+            for future in tqdm(futures, desc="Loading data samples"):
+                result = future.result()
+                if result is not None:
+                    data_samples.append(result)
+        
         return data_samples
     except Exception as e:
         raise Exception(f"Error loading data samples: {e}")
+    
 
-data_samples = load_data_samples("platyrrhine", max_workers=8)
+max_workers = max(1, multiprocessing.cpu_count() - 1)
+
+data_samples = load_data_samples("platyrrhine", max_workers)
 maps = load_maps("platyrrhine/softMapMatrix.mat")
-base_dist =  loadmat("platyrrhine/FinalDists.mat")["dists"]
+base_dist = loadmat("platyrrhine/FinalDists.mat")["dists"]
 
+
+# print shapes
+print(f"Data samples shape: {[sample.shape for sample in data_samples]}")
+print(f"Maps shape: {maps.shape}")
+print(f"Base dist shape: {base_dist.shape}")
 
 points = HDM(
     data_samples=data_samples,
