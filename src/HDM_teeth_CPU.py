@@ -3,7 +3,7 @@
 
 
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
 import os
 
@@ -41,8 +41,7 @@ def load_data_samples(data_samples_path, max_workers=1):
         
         data_samples = []
         
-        # Use ProcessPoolExecutor for I/O bound operations
-        with ProcessPoolExecutor(max_workers) as executor:
+        with ThreadPoolExecutor(max_workers) as executor:
             futures = [executor.submit(_load_single_sample, data_samples_path, name) for name in names[0]]
             
             for future in tqdm(futures, desc="Loading data samples"):
@@ -55,9 +54,9 @@ def load_data_samples(data_samples_path, max_workers=1):
         raise Exception(f"Error loading data samples: {e}")
     
 
-max_workers = max(1, multiprocessing.cpu_count() - 1)
+max_workers = max(1, multiprocessing.cpu_count() )
 
-data_samples = load_data_samples("platyrrhine", max_workers)
+data_samples = load_data_samples("platyrrhine", 1)
 maps = load_maps("platyrrhine/softMapMatrix.mat")
 base_dist = loadmat("platyrrhine/FinalDists.mat")["dists"]
 
