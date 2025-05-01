@@ -29,11 +29,11 @@ def compute_base_dist(hdm_data: HDMData) -> np.ndarray:
 def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[np.ndarray, np.ndarray]:
     """Compute the base kernel for diffusion maps."""
     try:
-        if HDMData.base_dist is None:
+        if hdm_data.base_dist is None:
             print("Computing base distances")
             base_dist = compute_base_dist(hdm_data)
         else:
-            base_dist = HDMData.base_dist
+            base_dist = hdm_data.base_dist
             
             
         s_dists = np.sort(base_dist, axis=1)

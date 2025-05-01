@@ -61,12 +61,6 @@ data_samples = load_data_samples("platyrrhine", max_workers)
 maps = load_maps("platyrrhine/softMapMatrix.mat")
 base_dist = loadmat("platyrrhine/FinalDists.mat")["dists"]
 
-
-# print shapes
-print(f"Data samples shape: {[sample.shape for sample in data_samples]}")
-print(f"Maps shape: {maps.shape}")
-print(f"Base dist shape: {base_dist.shape}")
-
 points = HDM(
     data_samples=data_samples,
     maps=maps,
