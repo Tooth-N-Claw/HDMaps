@@ -42,9 +42,9 @@ def load_data_samples(data_samples_path, max_workers=1):
     except Exception as e:
         raise Exception(f"Error loading data samples: {e}")
 
-data_samples = load_data_samples("../platyrrhine", max_workers=8)
-maps = load_maps("../platyrrhine/softMapMatrix.mat")
-base_dist =  loadmat("../platyrrhine/FinalDists.mat")["dists"]
+data_samples = load_data_samples("platyrrhine", max_workers=8)
+maps = load_maps("platyrrhine/softMapMatrix.mat")
+base_dist =  loadmat("platyrrhine/FinalDists.mat")["dists"]
 
 
 HDM(

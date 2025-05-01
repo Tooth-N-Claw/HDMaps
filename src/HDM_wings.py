@@ -56,7 +56,7 @@ directory_path = 'data/aligned_landmarks'
 files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
 
 if SUBSAMPLE == True:
-    files = random_subsamples(txt_files)
+    files = random_subsamples(files)
     
 
 data_samples, metadata = take_samples(files, directory_path)
