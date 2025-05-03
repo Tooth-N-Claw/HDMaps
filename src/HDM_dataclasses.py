@@ -22,3 +22,4 @@ class HDMConfig:
     base_dist_func: str = "fro"
     device: str | None = None
     calculate_fiber_kernel: bool = True
+    use_cupy: bool = False

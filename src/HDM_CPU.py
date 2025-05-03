@@ -99,8 +99,7 @@ def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diff
                 map_matrix = hdm_data.maps[j, k]
                 coo = map_matrix.tocoo()
                 
-                
-
+            
             """ Code for using maps """
             
             
@@ -123,7 +122,7 @@ def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diff
         (vals, (mat_row_idx, mat_col_idx)), 
         shape=(total_size, total_size)
     )
-    
+
     return diffusion_matrix
 
 
@@ -187,6 +186,7 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         
         diffusion_matrix = compute_diffusion_matrix(hdm_data, hdm_config, base_diffusion_matrix, row_nns)
         print("Computed diffusion matrix")
+
         
         if diffusion_matrix.shape[0] == 0 or diffusion_matrix.nnz == 0:
             raise ValueError("Empty diffusion matrix created. Check previous steps.")
@@ -197,8 +197,7 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         # print(sqrt_diag)
         
         eigvals, eigvecs = eigendecomposition(horizontal_diffusion_laplacian, hdm_config.num_eigenvectors)
-        print("Eigendecomposition done")
-        # print(eigvals)
+
          
         # Handle potential numerical issues
         inf_values = np.sum(np.isinf(sqrt_diag.data))

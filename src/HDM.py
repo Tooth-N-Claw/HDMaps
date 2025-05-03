@@ -15,13 +15,21 @@ def cumulative_indices(data_samples: list) -> np.ndarray:
 
 def run_HDM(backend, hdm_config, hdm_data):
     match backend:
-        case "CPU":
+        case "cpu":
             print("Running HDM on CPU")
             from HDM_CPU import run_hdm_cpu 
             return run_hdm_cpu(hdm_config, hdm_data)
-        case "GPU":
-            from HDM_GPU import run_hdm_gpu # import here to avoid torch being loaded unnecessarily, meaning you can run the code without having torch installed
+        case "gpu_pytorch":
+            from HDM_GPU_PyTorch import run_hdm_gpu # import here to avoid torch being loaded unnecessarily, meaning you can run the code without having torch installed
             return run_hdm_gpu(hdm_config, hdm_data)
+        case "gpu_pytorch_cupy":
+            # This is a speed up for pytorch as it does not have fast eigendecomposition yet for sparse matrix, so we use cupy instead. Though it has a overhead of converting the sparse matrix to cupy and back again
+            hdm_config.use_cupy = True
+            from HDM_GPU_PyTorch import run_hdm_gpu
+            return run_hdm_gpu(hdm_config, hdm_data)
+        case "gpu_cupy":
+            from HDM_GPU_CuPY import run_hdm_cupy
+            return run_hdm_cupy(hdm_config, hdm_data)
         
           
 
@@ -39,7 +47,9 @@ def HDM(
     base_dist = None, # add type
     data_samples: list[np.ndarray] = None, # add type or at least check that this type hinting is correct
     maps=None,
-    backend: str = "CPU",):
+    device="cpu",
+    backend: str = "CPU", 
+    ):
     """
     DOCUMENTATION HERE!
     """
@@ -59,6 +69,7 @@ def HDM(
         fiber_epsilon,
         num_eigenvectors,
         calculate_fiber_kernel = calculate_fiber_kernel,
+        device=device,
     )
 
     hdm_data = HDMData(
@@ -74,3 +85,6 @@ def HDM(
         return diffusion_coords
     except Exception as e:
         print(f"Error running HDM: {e}")
+        import traceback
+        traceback.print_exc()
+        raise

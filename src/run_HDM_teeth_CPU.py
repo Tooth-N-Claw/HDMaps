@@ -4,9 +4,7 @@
 
 
 from concurrent.futures import ThreadPoolExecutor
-import multiprocessing
 import os
-
 from tqdm import tqdm
 import trimesh
 from HDM import HDM
@@ -34,7 +32,7 @@ def _load_single_sample(data_samples_path, name_tuple):
         print(f"Warning: Could not load {path}: {e}")
         return None
 
-def load_data_samples(data_samples_path, max_workers=1):
+def load_data_samples(data_samples_path, max_workers=None):
     try:
         names_path = os.path.join(data_samples_path, "Names.mat")
         names = loadmat(names_path)["Names"]
@@ -54,9 +52,8 @@ def load_data_samples(data_samples_path, max_workers=1):
         raise Exception(f"Error loading data samples: {e}")
     
 
-max_workers = max(1, multiprocessing.cpu_count() )
 
-data_samples = load_data_samples("platyrrhine", 1)
+data_samples = load_data_samples("platyrrhine")
 maps = load_maps("platyrrhine/softMapMatrix.mat")
 base_dist = loadmat("platyrrhine/FinalDists.mat")["dists"]
 
@@ -73,7 +70,7 @@ points = HDM(
     num_eigenvectors=4,
     subsample_mapping=0.1,
     calculate_fiber_kernel=False,
-    backend="CPU",
+    backend="cpu",
 )
 
 visualize(points)
