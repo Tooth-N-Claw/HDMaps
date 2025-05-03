@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as cusp
@@ -14,7 +13,6 @@ def symmetrize(matrix):
 
 def compute_base_dist(hdm_data: HDMData) -> cp.ndarray:
     """Compute base distances between matrices using CuPy."""
-    # Convert numpy arrays to cupy arrays
     matrix_array = cp.array(hdm_data.data_samples)
     n = len(hdm_data.data_samples)
     distance_matrix = cp.zeros((n, n))

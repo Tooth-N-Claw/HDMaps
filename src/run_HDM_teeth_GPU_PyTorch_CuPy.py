@@ -77,7 +77,7 @@ diffusion_coords = HDM(
         num_eigenvectors=4,
         subsample_mapping=0.1,
         calculate_fiber_kernel=False,
-        backend="gpu_pytorch",
+        backend="gpu_pytorch_cupy",
         device=device,
     )
 

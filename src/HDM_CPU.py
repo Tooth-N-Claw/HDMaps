@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import scipy
 import scipy.sparse as sparse
@@ -12,7 +11,6 @@ from scipy.spatial import distance_matrix
 def symmetrize(matrix):
     """Symmetrize a matrix."""
     return 0.5 * (matrix + matrix.T)
-
 
 
 def compute_base_dist(hdm_data: HDMData) -> np.ndarray:
