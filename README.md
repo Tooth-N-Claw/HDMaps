@@ -25,7 +25,7 @@ Proof of Concept Pringle (PCP):
 
 ## CPU
 
-This version uses numpy, and is mainly single threaded (can be optimized for multithreaded in future if wanted)
+This version uses numpy, and is mainly single threaded
 **Time:** `python src/run_HDM_teeth_CPU.py: 308.21s user 1.61s system 1105% cpu 28.018 total`
 
 ## GPU PyTorch

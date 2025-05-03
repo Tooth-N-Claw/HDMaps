@@ -47,7 +47,7 @@ def HDM(
     base_dist = None, # add type
     data_samples: list[np.ndarray] = None, # add type or at least check that this type hinting is correct
     maps=None,
-    device="cpu",
+    device=None, # device is only used when using pytorch
     backend: str = "CPU", 
     ):
     """

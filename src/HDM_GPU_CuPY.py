@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import cupy as cp
 import cupyx.scipy.sparse as cusp
@@ -11,118 +12,57 @@ def symmetrize(matrix):
     return 0.5 * (matrix + matrix.T)
 
 
-def compute_base_dist(hdm_data: HDMData) -> cp.ndarray:
-    """Compute base distances between matrices using CuPy."""
-    matrix_array = cp.array(hdm_data.data_samples)
-    n = len(hdm_data.data_samples)
-    distance_matrix = cp.zeros((n, n))
-
-    for i in range(n):
-        distance_matrix[i, :] = cp.linalg.norm(matrix_array - matrix_array[i], axis=(1, 2), ord='fro')
-
-    return distance_matrix
 
 
 def compute_base_kernel(hdm_config: HDMConfig, hdm_data: HDMData) -> tuple[cp.ndarray, cp.ndarray]:
     """Compute the base kernel for diffusion maps using CuPy."""
-    try:
-        if hdm_data.base_dist is None:
-            print("Computing base distances")
-            base_dist = compute_base_dist(hdm_data)
-        else:
-            # Convert numpy array to cupy array
-            base_dist = cp.array(hdm_data.base_dist)
-        
-        # Sort distances and get nearest neighbors
-        s_dists = cp.sort(base_dist, axis=1)
-        row_nns = cp.argsort(base_dist, axis=1)
-        
-        # Extract k nearest neighbors (excluding self)
-        s_dists = s_dists[:, 1:hdm_config.num_neighbors+1]
-        row_nns = row_nns[:, 1:hdm_config.num_neighbors+1]
-        
-        # Create sparse weight matrix
-        rows = cp.repeat(cp.arange(hdm_data.num_data_samples).reshape(-1, 1),
-                        hdm_config.num_neighbors, axis=1).flatten()
-        cols = row_nns.flatten()
-        vals = s_dists.flatten()
-        
-        base_weights = cusp.csr_matrix(
-            (vals, (rows, cols)),
-            shape=(hdm_data.num_data_samples, hdm_data.num_data_samples)
-        )
-        
-        # Symmetrize the matrix using min operation
-        base_weights_array = base_weights.toarray()
-        base_weights_array_T = base_weights.T.toarray()
-        min_weights = cp.minimum(base_weights_array, base_weights_array_T)
-        base_weights = cusp.csr_matrix(min_weights)
-        
-        # Update the distances with values from the symmetrized matrix
-        for j in range(hdm_data.num_data_samples):
-            s_dists[j, :] = base_weights[j, row_nns[j, :]].toarray().flatten()
-        
-        # Apply kernel function
-        s_dists = cp.exp(-cp.square(s_dists) / hdm_config.base_epsilon)
-        
-        return s_dists, row_nns
-        
-    except Exception as e:
-        raise Exception(f"Error computing base kernel: {e}")
-
-
-def compute_distance_matrix(mat1, mat2):
-    """Compute distance matrix between two sets of points using CuPy."""
-    # Convert numpy arrays to cupy arrays if they're not already
-    if isinstance(mat1, np.ndarray):
-        mat1 = cp.array(mat1)
-    if isinstance(mat2, np.ndarray):
-        mat2 = cp.array(mat2)
+    if hdm_data.base_dist is None:
+        # TODO: Implement base distance computation for CuPy
+        raise NotImplementedError("Base distances not provided. This backend does not support computing them yet.")
+    else:
+        base_dist = cp.array(hdm_data.base_dist)
     
-    # Calculate pairwise squared Euclidean distances
-    sum1 = cp.sum(mat1**2, axis=1).reshape(-1, 1)
-    sum2 = cp.sum(mat2**2, axis=1)
+    # Sort distances and get nearest neighbors
+    s_dists = cp.sort(base_dist, axis=1)
+    row_nns = cp.argsort(base_dist, axis=1)
     
-    # Use matrix multiplication for efficiency
-    dot_product = cp.dot(mat1, mat2.T)
+    # Extract k nearest neighbors (excluding self)
+    s_dists = s_dists[:, 1:hdm_config.num_neighbors+1]
+    row_nns = row_nns[:, 1:hdm_config.num_neighbors+1]
     
-    # Calculate distances: ||a-b||^2 = ||a||^2 + ||b||^2 - 2*a·b
-    distances = sum1 + sum2 - 2 * dot_product
+    # Create sparse weight matrix
+    rows = cp.repeat(cp.arange(hdm_data.num_data_samples).reshape(-1, 1),
+                    hdm_config.num_neighbors, axis=1).flatten()
+    cols = row_nns.flatten()
+    vals = s_dists.flatten()
     
-    # Handle numerical errors (small negative values)
-    distances = cp.maximum(distances, 0)
+    base_weights = cusp.csr_matrix(
+        (vals, (rows, cols)),
+        shape=(hdm_data.num_data_samples, hdm_data.num_data_samples)
+    )
     
-    # Return the square root for Euclidean distance
-    return cp.sqrt(distances)
-
-
-def compute_fiber_kernel(hdm_data: HDMData, hdm_config: HDMConfig, j, k):
-    """Compute fiber kernel between two data samples using CuPy."""
-    # Convert numpy arrays to cupy arrays if needed
-    sample_j = hdm_data.data_samples[j]
-    sample_k = hdm_data.data_samples[k]
+    # Symmetrize the matrix using min operation
+    base_weights_array = base_weights.toarray()
+    base_weights_array_T = base_weights.T.toarray()
+    min_weights = cp.minimum(base_weights_array, base_weights_array_T)
+    base_weights = cusp.csr_matrix(min_weights)
     
-    if isinstance(sample_j, np.ndarray):
-        sample_j = cp.array(sample_j)
-    if isinstance(sample_k, np.ndarray):
-        sample_k = cp.array(sample_k)
+    # Update the distances with values from the symmetrized matrix
+    for j in range(hdm_data.num_data_samples):
+        s_dists[j, :] = base_weights[j, row_nns[j, :]].toarray().flatten()
     
-    # Compute distance matrix
-    dist_mat = compute_distance_matrix(sample_j, sample_k)
+    # Apply kernel function
+    s_dists = cp.exp(-cp.square(s_dists) / hdm_config.base_epsilon)
     
-    # Convert to sparse and apply kernel
-    coo = cusp.csr_matrix(dist_mat).tocoo()
-    coo.data = cp.exp(-coo.data**2 / hdm_config.fiber_epsilon)
+    return s_dists, row_nns
+        
     
-    return coo
-
-
-def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diffusion_mat: cp.ndarray, row_nns: cp.ndarray) -> cusp.csr_matrix:
-    """Compute the diffusion matrix for HDM using CuPy."""
+def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diffusion_mat: cp.ndarray, row_nns: cp.ndarray, batch_size: int = 64) -> cusp.csr_matrix:
+    """Compute the diffusion matrix for HDM using CuPy with batching."""
     # Initialize lists for constructing sparse matrix
-    mat_row_idx = []
-    mat_col_idx = []
-    vals = []
+    all_mat_row_idx = []
+    all_mat_col_idx = []
+    all_vals = []
     
     # Convert cumulative_block_indices to CuPy array if it's not already
     if isinstance(hdm_data.cumulative_block_indices, np.ndarray):
@@ -130,58 +70,83 @@ def compute_diffusion_matrix(hdm_data: HDMData, hdm_config: HDMConfig, base_diff
     else:
         cumulative_block = hdm_data.cumulative_block_indices
     
-    for j in tqdm(range(hdm_data.num_data_samples), desc="Computing diffusion matrix"):
-        for nns in range(base_diffusion_mat.shape[1]):
-            if base_diffusion_mat[j, nns] == 0:
-                continue
-            
-            k = int(row_nns[j, nns].get())  # Explicitly convert to Python int
-            
-            # Compute fiber kernel or use provided maps
-            if hdm_config.calculate_fiber_kernel:
-                coo = compute_fiber_kernel(hdm_data, hdm_config, j, k)
-            else:
-                # Convert numpy sparse matrix to cupy sparse matrix if needed
-                map_matrix = hdm_data.maps[j, k]
-                if not isinstance(map_matrix, cusp.csr_matrix):
-                    # Convert scipy sparse to cupy sparse
-                    map_matrix = cusp.csr_matrix(
-                        (cp.array(map_matrix.data), 
-                         cp.array(map_matrix.indices), 
-                         cp.array(map_matrix.indptr)),
-                        shape=map_matrix.shape
-                    )
-                coo = map_matrix.tocoo()
-            
-            # Forward mapping
-            mat_row_idx.append(coo.row + int(cumulative_block[j].get()))
-            mat_col_idx.append(coo.col + int(cumulative_block[k].get()))
-            vals.append(float(base_diffusion_mat[j, nns].get()) * coo.data)
-            
-            # Backward mapping (transposed)
-            coo = coo.transpose()
-            mat_row_idx.append(coo.row + int(cumulative_block[k].get()))
-            mat_col_idx.append(coo.col + int(cumulative_block[j].get()))
-            vals.append(float(base_diffusion_mat[j, nns].get()) * coo.data)
+    # Process data in batches
+    num_batches = (hdm_data.num_data_samples + batch_size - 1) // batch_size
     
-    # Concatenate arrays for sparse matrix construction
-    if mat_row_idx:
-        mat_row_idx = cp.concatenate(mat_row_idx)
-        mat_col_idx = cp.concatenate(mat_col_idx)
-        vals = cp.concatenate(vals)
-    else:
-        # Return empty matrix if no entries
-        total_size = int(cumulative_block[-1].get())
-        return cusp.csr_matrix((total_size, total_size))
+    for batch_idx in tqdm(range(num_batches), desc="Computing diffusion matrix (batched)"):
+        # Determine batch range
+        start_j = batch_idx * batch_size
+        end_j = min(start_j + batch_size, hdm_data.num_data_samples)
+        
+        # Initialize batch lists
+        batch_row_idx = []
+        batch_col_idx = []
+        batch_vals = []
+        
+        for j in range(start_j, end_j):
+            # Find non-zero entries in this row of base_diffusion_mat
+            nonzero_nns = cp.nonzero(base_diffusion_mat[j])[0]
+            
+            if len(nonzero_nns) == 0:
+                continue
+                
+            for nns in nonzero_nns:
+                k = int(row_nns[j, nns].get())  # Convert to Python int
+                
+                # Compute fiber kernel or use provided maps
+                if hdm_config.calculate_fiber_kernel:
+                    raise NotImplementedError("Fiber kernel computation not implemented for CuPy.")
+                else:
+                    # Convert numpy sparse matrix to cupy sparse matrix if needed
+                    map_matrix = hdm_data.maps[j, k]
+                    if not isinstance(map_matrix, cusp.csr_matrix):
+                        # Convert scipy sparse to cupy sparse
+                        map_matrix = cusp.csr_matrix(
+                            (cp.array(map_matrix.data), 
+                             cp.array(map_matrix.indices), 
+                             cp.array(map_matrix.indptr)),
+                            shape=map_matrix.shape
+                        )
+                    coo = map_matrix.tocoo()
+                
+                # Forward mapping
+                batch_row_idx.append(coo.row + int(cumulative_block[j].get()))
+                batch_col_idx.append(coo.col + int(cumulative_block[k].get()))
+                batch_vals.append(float(base_diffusion_mat[j, nns].get()) * coo.data)
+                
+                # Backward mapping (transposed)
+                coo_t = map_matrix.transpose().tocoo()
+                batch_row_idx.append(coo_t.row + int(cumulative_block[k].get()))
+                batch_col_idx.append(coo_t.col + int(cumulative_block[j].get()))
+                batch_vals.append(float(base_diffusion_mat[j, nns].get()) * coo_t.data)
+        
+        # Concatenate batch results if any exist
+        if batch_row_idx:
+            batch_row_tensor = cp.concatenate(batch_row_idx)
+            batch_col_tensor = cp.concatenate(batch_col_idx)
+            batch_val_tensor = cp.concatenate(batch_vals)
+            
+            all_mat_row_idx.append(batch_row_tensor)
+            all_mat_col_idx.append(batch_col_tensor)
+            all_vals.append(batch_val_tensor)
     
     # Determine proper dimensions for the matrix
     total_size = int(cumulative_block[-1].get())
     
-    # Create sparse matrix
-    diffusion_matrix = cusp.csr_matrix(
-        (vals, (mat_row_idx, mat_col_idx)),
-        shape=(total_size, total_size)
-    )
+    # Concatenate all batches
+    if all_mat_row_idx:
+        mat_row_idx = cp.concatenate(all_mat_row_idx)
+        mat_col_idx = cp.concatenate(all_mat_col_idx)
+        vals = cp.concatenate(all_vals)
+        
+        # Create sparse matrix
+        diffusion_matrix = cusp.csr_matrix(
+            (vals, (mat_row_idx, mat_col_idx)),
+            shape=(total_size, total_size)
+        )
+    else:
+        # Return empty matrix if no entries
+        diffusion_matrix = cusp.csr_matrix((total_size, total_size))
     
     return diffusion_matrix
 
@@ -267,36 +232,28 @@ def run_hdm_cupy(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
     try:
         print("Running HDM with CuPy")
         
-        # Compute base kernel
         base_diffusion_matrix, row_nns = compute_base_kernel(hdm_config, hdm_data)
         print("Computed base kernel")
         
-        # Compute diffusion matrix
         diffusion_matrix = compute_diffusion_matrix(hdm_data, hdm_config, base_diffusion_matrix, row_nns)
         print("Computed diffusion matrix")
         
-        # Check if diffusion matrix is empty
         if diffusion_matrix.shape[0] == 0 or diffusion_matrix.nnz == 0:
             raise ValueError("Empty diffusion matrix created. Check previous steps.")
         
-        # Compute horizontal diffusion Laplacian
         horizontal_diffusion_laplacian, sqrt_diag = compute_horizontal_diffusion_laplacian(diffusion_matrix)
         print("Computed horizontal diffusion Laplacian")
         
-        # Perform eigendecomposition
         eigvals, eigvecs = eigendecomposition(horizontal_diffusion_laplacian, hdm_config.num_eigenvectors)
         print("Eigendecomposition done")
         
-        # Handle potential numerical issues
         inf_values = cp.sum(cp.isinf(sqrt_diag.data))
         if inf_values > 0:
             print(f"Warning: {inf_values} infinite values found and replaced with zeros")
             sqrt_diag.data[cp.isinf(sqrt_diag.data)] = 0
         
-        # Compute final embedding
         bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
         
-        # Create diagonal matrix for eigenvalues
         sqrt_lambda_values = cp.sqrt(eigvals[1:])
         sqrt_lambda = create_diagonal_matrix(sqrt_lambda_values)
         
