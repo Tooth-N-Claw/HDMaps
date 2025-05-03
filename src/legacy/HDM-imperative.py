@@ -2,7 +2,7 @@ import pickle
 from scipy.io import loadmat
 from scipy.sparse import block_array, linalg, spdiags, csr_matrix
 import scipy
-from visualize import visualize
+from src.utils.visualize import visualize
 import numpy as np
 import trimesh
 import scipy.sparse as sparse

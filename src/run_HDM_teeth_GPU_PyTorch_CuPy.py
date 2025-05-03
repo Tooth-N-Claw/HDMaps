@@ -6,7 +6,7 @@ from tqdm import tqdm
 import trimesh
 from HDM import HDM
 from scipy.io import loadmat
-from visualize import visualize
+from utils.visualize import visualize
 
 def load_maps(data_samples_path: str, device):
     maps = loadmat(data_samples_path)["softMapMatrix"]

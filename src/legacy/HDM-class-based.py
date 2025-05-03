@@ -4,7 +4,7 @@ import scipy.sparse as sparse
 from scipy.io import loadmat
 import trimesh
 from tqdm import tqdm  # Add this for better progress tracking
-from visualize import visualize
+from src.utils.visualize import visualize
 
 class HorizontalDiffusionMaps:
     """

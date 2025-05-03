@@ -1,12 +1,10 @@
 import numpy as np
 import os
-import re
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import pdist, squareform
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import eigsh
 from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 from sklearn.manifold import MDS
 import numpy as np
 import os

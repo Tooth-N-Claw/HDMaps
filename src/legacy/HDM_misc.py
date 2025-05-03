@@ -10,7 +10,7 @@ import scipy
 import pickle
 import glob
 import os
-from visualize import visualize
+from src.utils.visualize import visualize
 
 
 def sparse_distance_matrix(data_samples1, data_samples2, norm_function, sparsity_param):

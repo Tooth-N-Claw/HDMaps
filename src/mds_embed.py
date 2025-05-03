@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import MDS
 from mpl_toolkits.mplot3d import Axes3D
 
-from visualize import plot_embedding_3d
+from utils.visualize import plot_embedding_3d
 
 
 def embed_plot(dist_mat):
