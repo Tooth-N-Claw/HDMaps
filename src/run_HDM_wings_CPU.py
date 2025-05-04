@@ -1,5 +1,5 @@
 from HDM import HDM
-from utils.visualize import visualize
+from utils.visualize import visualize, visualize_corresponding_points
 import numpy as np
 import os
 
@@ -77,8 +77,13 @@ if __name__ == "__main__":
     # dist_mat = distance_matrix(diffusion_coords, diffusion_coords)
     # print("compute dist")
     
-    species = [me["species"] for me in metadata]
-    visualize(diffusion_coords[:, :3], species)
+    # species = [me["species"] for me in metadata]
+
+    #visualize by coloring corresponding points same color
+    visualize_corresponding_points(diffusion_coords[:, :3], len(data_samples))#, species)
+
+    # Visualize by species
+    # visualize(diffusion_coords[:, :3], species)
 
     # points = embed_plot(dist_mat)
     # plot_embedding_3d(points, metadata, color_key="species")

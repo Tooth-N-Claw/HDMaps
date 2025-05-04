@@ -22,6 +22,7 @@ def visualize(points: np.ndarray, data_samples_types: list[str] = None) -> None:
         
         species_to_index = {species: i for i, species in enumerate(unique_species)}
         indices = np.array([species_to_index[species] for species in data_samples_types])
+        print(indices)
         
         point_cloud["species"] = indices
         cmap = cm.get_cmap("rainbow", num_species)
@@ -44,6 +45,25 @@ def visualize(points: np.ndarray, data_samples_types: list[str] = None) -> None:
 
     plotter.show()
     # save the plot
+
+
+def visualize_corresponding_points(points: np.ndarray, num_samples) -> None:
+    
+    # NOTE!! only works for wings!
+    point_cloud = pv.PolyData(points)
+    plotter = pv.Plotter()
+
+    print(np.arange(6))
+    scalars = np.tile(np.arange(6), num_samples)
+    print(scalars)
+    cmap = cm.get_cmap("rainbow", 6)
+    norm = Normalize(vmin=0, vmax=6-1)
+    
+    plotter.add_mesh(point_cloud, scalars=scalars, point_size=10, 
+                     render_points_as_spheres=True, cmap="rainbow", 
+                     clim=[0, 5], show_scalar_bar=False)
+
+    plotter.show()
 
 
 def plot_embedding_3d(embedding, metadata, color_key):
