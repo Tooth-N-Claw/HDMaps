@@ -3,6 +3,8 @@
 
 For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md).
 
+For a demo of the HDM library see [HDM_Demo](https://github.com/frisbro303/HDM_demo).
+
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
