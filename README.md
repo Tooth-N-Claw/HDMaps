@@ -1,6 +1,13 @@
 # HDM_Python
-For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md)
+[![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
 
+For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md).
+
+## Installation
+To install the latest development version of `HDM_Python` run:
+```bash
+pip install git+https://github.com/frisbro303/HDM_Python
+```
 
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
