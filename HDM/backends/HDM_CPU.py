@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 import scipy.sparse as sparse
 from tqdm import tqdm
-from utils.HDM_dataclasses import HDMConfig, HDMData
+from HDM.utils.HDM_dataclasses import HDMConfig, HDMData
 from scipy.spatial import distance_matrix
 
 
