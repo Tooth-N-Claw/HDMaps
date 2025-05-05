@@ -2,7 +2,7 @@
 import torch
 import numpy as np
 from tqdm import tqdm
-from utils.HDM_dataclasses import HDMConfig, HDMData
+from HDM.utils.HDM_dataclasses import HDMConfig, HDMData
 
 
 
