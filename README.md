@@ -1,5 +1,5 @@
 # HDM_Python
-For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md)
+For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md).
 
 
 ## License
