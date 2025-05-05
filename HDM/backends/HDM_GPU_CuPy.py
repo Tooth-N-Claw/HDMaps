@@ -3,7 +3,7 @@ import cupy as cp
 import cupyx.scipy.sparse as cusp
 import cupyx.scipy.sparse.linalg as cusplinalg
 from tqdm import tqdm
-from utils.HDM_dataclasses import HDMConfig, HDMData
+from HDM.utils.HDM_dataclasses import HDMConfig, HDMData
 from scipy.spatial import distance_matrix
 from cupyx.scipy.sparse import csr_matrix
 
