@@ -33,4 +33,4 @@ jobs:
       env:
         PYTHONPATH: .HDM HDM/tests/
       run: |
-        pytest signDNE/tests
+        pytest HDM/tests
