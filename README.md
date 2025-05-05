@@ -3,6 +3,17 @@
 
 For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md).
 
+## Installation
+![PyPI - Version](https://img.shields.io/pypi/v/signDNE)
+
+The recommended installation method is to install the latest tagged release with `pip`:
+```bash
+pip install signDNE
+```
+Alternatively, you can install the latest development version of `SignDNE` by running:
+```bash
+pip install git+https://github.com/frisbro303/SignDNE
+```
 
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
