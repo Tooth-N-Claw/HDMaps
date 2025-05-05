@@ -1,4 +1,5 @@
 # HDM_Python
+[![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
 For documentation see [docs.md](https://github.com/frisbro303/HDM_Python/blob/main/docs.md).
 
 
