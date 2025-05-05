@@ -22,8 +22,5 @@ dependencies = ['scipy==1.14.1', 'trimesh==4.6.8', 'numpy==2.2.0', 'pyvista==0.4
 [project.urls]
 Homepage = "https://github.com/frisbro303/HDM_Python"
 
-
-
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["HDM", "HDM.*"]
+include = ["HDM*"]
