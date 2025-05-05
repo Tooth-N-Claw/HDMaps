@@ -3,7 +3,7 @@ To install the latest development version of `HDM_Python` run:
 ```bash
 pip install git+https://github.com/frisbro303/HDM_Python
 ```
-- If running on gpu, then install pytorch or/and cupy depending on which gpu versions you run. Note cupy requires nvidia gpu
+If running on gpu, then install pytorch or/and cupy depending on which gpu versions you run. Note cupy requires nvidia gpu
 
 # Running HDM on platyrrhine teeth
 
