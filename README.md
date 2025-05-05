@@ -42,3 +42,10 @@ In an attempt to circumvent PyTorch's poor sparse eigendecomposition support, a 
 
 A version using CuPy was made, due to its good support for sparse operations. This backend ended up being the fastest
 **Time:** `python src/run_HDM_teeth_GPU_CuPy.py  13.77s user 1.85s system 133% cpu 11.703 total`
+
+
+## License
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+This software is licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/frisbro303/SignDNE/blob/2347bf47a35affe612ac8d60e64805a3f1891951/LICENSE) file for details. 
+
