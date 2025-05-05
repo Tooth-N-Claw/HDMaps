@@ -1,4 +1,4 @@
-from utils.HDM_dataclasses import HDMConfig, HDMData
+from HDM.utils.HDM_dataclasses import HDMConfig, HDMData
 import numpy as np
 
 
