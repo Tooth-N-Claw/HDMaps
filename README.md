@@ -12,7 +12,7 @@ pip install git+https://github.com/frisbro303/HDM_Python
 ```
 
 ## Proof of Concept Pringle 
-Embedding the first three dimensions of the HDM coordinates on the original lemur teeth data set, we expect a pringle like surface. We call the following the proof of concept pringle (PCP):
+Embedding the first three dimensions of the HDM coordinates on the original lemur teeth data set, we expect a pringle like surface. The following image demonstrates that this Python package achieve the expected embedding surface, in other words it is a Proof of Concept Pringle (PCP).
 ![](pringle.png)
 
 ## License
