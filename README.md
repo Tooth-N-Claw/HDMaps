@@ -5,16 +5,15 @@
 
 - A demo of the HDM library is found in [HDM_Demo](https://github.com/frisbro303/HDM_demo).
 
-Embedding the first three dimensions of the HDM coordinates on the original lemur teeth data set, we expect a pringle like surface. We call the following the proof of concept pringle (PCP):
-
-![](pringle.png)
-
-
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
 pip install git+https://github.com/frisbro303/HDM_Python
 ```
+
+## Proof of Concept Pringle 
+Embedding the first three dimensions of the HDM coordinates on the original lemur teeth data set, we expect a pringle like surface. We call the following the proof of concept pringle (PCP):
+![](pringle.png)
 
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
