@@ -182,6 +182,8 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         print("Computed base kernel")
         
         diffusion_matrix = compute_diffusion_matrix(hdm_data, hdm_config, base_diffusion_matrix, row_nns)
+
+        np.save("diffusion_matrix.npy", diffusion_matrix)
         print("Computed diffusion matrix")
 
         
