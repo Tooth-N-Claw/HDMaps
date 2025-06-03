@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import scipy.sparse as sparse
+from scipy.sparse import save_npz
 from tqdm import tqdm
 from HDM.utils.HDM_dataclasses import HDMConfig, HDMData
 from scipy.spatial import distance_matrix
@@ -183,7 +184,7 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         
         diffusion_matrix = compute_diffusion_matrix(hdm_data, hdm_config, base_diffusion_matrix, row_nns)
 
-        np.save("diffusion_matrix.npy", diffusion_matrix)
+        save_npz("diffusion_matrix.npy", diffusion_matrix)
         print("Computed diffusion matrix")
 
         
