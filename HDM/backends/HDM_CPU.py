@@ -184,15 +184,13 @@ def run_hdm_cpu(hdm_config: HDMConfig, hdm_data: HDMData) -> np.ndarray:
         
         diffusion_matrix = compute_diffusion_matrix(hdm_data, hdm_config, base_diffusion_matrix, row_nns)
 
-        save_npz("diffusion_matrix.npy", diffusion_matrix)
         print("Computed diffusion matrix")
-
         
         if diffusion_matrix.shape[0] == 0 or diffusion_matrix.nnz == 0:
             raise ValueError("Empty diffusion matrix created. Check previous steps.")
         
         horizontal_diffusion_laplacian, sqrt_diag = compute_horizontal_diffusion_laplacian(diffusion_matrix)
-        # print(np.allclose(horizontal_diffusion_laplacian, horizontal_diffusion_laplacian.T))
+        save_npz("horizontal_laplacian.npy", horizontal_diffusion_laplacian)
         print("Computed horizontal diffusion Laplacian")
         # print(sqrt_diag)
         
