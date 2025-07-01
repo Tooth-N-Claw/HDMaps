@@ -15,25 +15,8 @@ def cumulative_indices(data_samples: list) -> np.ndarray:
     )
 
 
-# def run_HDM(backend, hdm_config, hdm_data):
-#     match backend:
-#         case "cpu":
-#             print("Running HDM on CPU")
-#             from HDM.backends.HDM_CPU import run_hdm_cpu 
-#             return run_hdm_cpu(hdm_config, hdm_data)
-#         case "gpu_pytorch":
-#             from HDM.backends.HDM_GPU_PyTorch import run_hdm_gpu # import here to avoid torch being loaded unnecessarily, meaning you can run the code without having torch installed
-#             return run_hdm_gpu(hdm_config, hdm_data)
-#         case "gpu_pytorch_cupy":
-#             # This is a speed up for pytorch as it does not have fast eigendecomposition yet for sparse matrix, so we use cupy instead. Though it has a overhead of converting the sparse matrix to cupy and back again
-#             hdm_config.use_cupy = True
-#             from HDM.backends.HDM_GPU_PyTorch import run_hdm_gpu
-#             return run_hdm_gpu(hdm_config, hdm_data)
-#         case "gpu_cupy":
-#             from HDM.backends.HDM_GPU_CuPy import run_hdm_cupy
-#             return run_hdm_cupy(hdm_config, hdm_data)
-        
-          
+METRICS = {"frobenius", "euclidean"}
+
 
 def HDM(
     data_samples: list[np.ndarray],
@@ -41,8 +24,8 @@ def HDM(
     fiber_epsilon: float = 0.08,
     num_eigenvectors: int = 4,
     device: str | None = "CPU",
-    base_dist_func: str = "Frobenius",
-    fiber_dist_func: str = "Euclidean",
+    base_metric: str = "frobenius",
+    fiber_metric: str = "euclidean",
     base_sparsity: float = 0.08,
     fiber_sparsity: float = 0.08,
     base_kernel: Optional[coo_matrix] = None,
@@ -50,10 +33,8 @@ def HDM(
     base_distances: Optional[coo_matrix] = None,
     fiber_distances: Optional[coo_matrix] = None,
     ):
-
         
     cumulative_block_indices = cumulative_indices(data_samples)
-
 
     if base_kernel is not None:
         base_kernel = JaxCoo.from_scipy(base_kernel)
@@ -66,6 +47,12 @@ def HDM(
 
     if fiber_distances not None:
         fiber_distances = JaxCoo.from_scipy(fiber_distances)
+
+    if not base_metric in METRICS:
+        raise f"Error: {base_metric} is not a valid base metric."
+
+    if not fiber_metric in METRICS:
+        raise f"Error: {fiber_metric} is not a valid fiber metric."
 
     hdm_config = HDMConfig(
         base_epsilon,
