@@ -77,6 +77,7 @@ def HDM(
     hdm_data = HDMData(
         data_samples = data_samples,
         base_distances = base_dist,
+        cumulative_block_indices = cumulative_block_indices
     )
     
     diffusion_coords = run_hdm(backend, hdm_config, hdm_data)
