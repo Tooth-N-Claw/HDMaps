@@ -3,7 +3,7 @@ import scipy
 import scipy.sparse as sparse
 from scipy.sparse import save_npz
 from tqdm import tqdm
-from HDM.utils.HDM_dataclasses import HDMConfig, HDMData
+from HDM.utils.containers import HDMConfig, HDMData
 from scipy.spatial import distance_matrix
 
 
