@@ -1,23 +1,51 @@
 from typing import NamedTuple, Optional
+import scipy.sparse as sparse
 import jax.numpy as jnp
 
 
-class Coo(NamedTuple):
-    row_idx: jnp.ndarray
-    col_idx: jnp.ndarray
-    values: jnp.ndarray
+class JaxCoo(NamedTuple):
+    row: jnp.ndarray
+    col: jnp.ndarray
+    data: jnp.ndarray
     shape: tuple[int, int]
 
-    def with_values(self, values):
-        return self._replace(values = values)
+    def with_data(self, new_data):
+        return self._replace(data = new_data)
+
+    def purge_zeros(self):
+        mask = self.data != 0
+        return JaxCoo(
+            row = self.row[mask],
+            col = self.col[mask],
+            data = self.data[mask],
+            shape = self.shape
+        )
+
+    def toscipy(self):
+        return sparse.coo_matrix((self.data, (self.row, self.col)), self.shape)
+
+  
+def jax_coo(arr):
+    return JaxCoo(
+        row = jnp.array(arr.row),
+        col = jnp.array(arr.col),
+        data = jnp.array(arr.data),
+        shape = arr.shape
+    )
+        
+
+class BaseKernel(NamedTuple):
+    data: jnp.ndarray
+    block_ids: jnp.ndarray
 
 
 class HDMData(NamedTuple):
-    data_samples: jnp.ndarray
-    base_kernel: Optional[Coo] = None
-    fiber_kernel: Optional[Coo] = None
-    base_distances: Optional[Coo] = None
-    fiber_distances: Optional[Coo] = None
+    data_samples: list[jnp.ndarray]
+    cumulative_block_indices: jnp.ndarray 
+    base_kernel: JaxCoo | None = None
+    fiber_kernel: JaxCoo | None = None
+    base_distances: JaxCoo | None = None
+    fiber_distances: JaxCoo | None = None
 
     def with_base_kernel(self, base_kernel):
         return self._replace(base_kernel = base_kernel)
