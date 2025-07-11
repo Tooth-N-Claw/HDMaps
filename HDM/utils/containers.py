@@ -1,6 +1,7 @@
 from typing import NamedTuple, Optional
 import scipy.sparse as sparse
 import jax.numpy as jnp
+from jax.experimental import sparse
 
 
 class JaxCoo(NamedTuple):
@@ -34,24 +35,20 @@ def jax_coo(arr):
     )
         
 
-class BaseKernel(NamedTuple):
-    data: jnp.ndarray
-    block_ids: jnp.ndarray
-
 
 class HDMData(NamedTuple):
     data_samples: list[jnp.ndarray]
     cumulative_block_indices: jnp.ndarray 
-    base_kernel: JaxCoo | None = None
-    fiber_kernel: JaxCoo | None = None
-    base_distances: JaxCoo | None = None
-    fiber_distances: JaxCoo | None = None
+    base_kernel: sparse.BCOO | None = None
+    fiber_kernel: sparse.BCOO | None = None
+    base_distances: sparse.BCOO | None = None
+    fiber_distances: sparse.BCOO | None = None
 
-    def with_base_kernel(self, base_kernel):
-        return self._replace(base_kernel = base_kernel)
+    # def with_base_kernel(self, base_kernel):
+    #     return self._replace(base_kernel = base_kernel)
 
-    def with_fiber_kernel(self, fiber_kernel):
-        return self._replace(fiber_kernel = fiber_kernel)
+    # def with_fiber_kernel(self, fiber_kernel):
+    #     return self._replace(fiber_kernel = fiber_kernel)
 
 
 class HDMConfig(NamedTuple):
