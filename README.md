@@ -50,7 +50,6 @@ def hdm_embed(
 ```
 
 ## Configuration: `HDMConfig`
-## Configuration: `HDMConfig`
 
 The `HDMConfig` class provides configuration parameters for controlling kernel computations and embedding:
 
