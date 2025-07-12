@@ -8,7 +8,7 @@ pip install git+https://github.com/frisbro303/HDM_Python
 ```
 
 ## Usage and Documentation
-The package provides an accessible implementation of Horizontal Diffusion Maps, as introduced in the paper [The diffusion geometry of fibre bundles: Horizontal diffusion maps](https://www.sciencedirect.com/science/article/pii/S1063520318302215).
+The package provides an accessible implementation of Horizontal Diffusion Maps, as introduced in the paper: [The diffusion geometry of fibre bundles: Horizontal diffusion maps](https://www.sciencedirect.com/science/article/pii/S1063520318302215).
 
 The package is suitable for various applications and is designed to be easily configurable.
 
