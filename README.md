@@ -1,7 +1,7 @@
 # HDM_Python
 [![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
 
-Code documentation is found on [https://frisbro303.github.io/HDM_Python/].
+Code documentation is found at https://frisbro303.github.io/HDM_Python/.
 
 ## Installation
 To install the latest development version of `HDM_Python` run:
