@@ -28,7 +28,6 @@ fiber_kernel = bmat(blocks, format='csr').tocoo()
 
 base_distances = coo_matrix(loadmat("platyrrhine/FinalDists.mat")["dists"]).tocoo()
 
-
 points = HDM.hdm_embed(
     data_samples = data_samples,
     fiber_kernel = fiber_kernel,
@@ -36,3 +35,4 @@ points = HDM.hdm_embed(
 )
 
 visualize(points[:, :3])
+

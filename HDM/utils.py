@@ -13,8 +13,21 @@ class HDMConfig(NamedTuple):
     device: str | None = "CPU"
     base_metric: str = "frobenius"
     fiber_metric: str = "euclidean"
-    base_sparsity: float = 0.08
-    fiber_sparsity: float = 0.08
+    base_sparsity: float = 2
+    fiber_sparsity: float = 2
+
+
+def ensure_sparse(matrix):
+    """Converts a sparse scipy matrix to a jax BCOO"""
+    return BCOO.from_scipy_sparse(matrix) if matrix is not None else None
+
+
+def threshold_sparsify(matrix, threshold):
+    mask = matrix.data <= threshold
+    new_data = matrix.data[mask]
+    new_indices = matrix.indices[mask, :]
+    new_matrix = BCOO((new_data, new_indices), shape = matrix.shape)
+    return new_matrix
 
     
 def compute_block_indices(data_samples: list) -> jnp.ndarray:

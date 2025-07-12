@@ -5,7 +5,7 @@ import numpy as np
 
 from jax.experimental.sparse import bcoo_reduce_sum
 from .distances import compute_base_distances, compute_fiber_distances
-from .utils import HDMConfig
+from .utils import HDMConfig, ensure_sparse, threshold_sparsify
 
 
 def compute_kernel(distances: BCOO, eps: float) -> BCOO:
@@ -31,11 +31,6 @@ def compute_kernel(distances: BCOO, eps: float) -> BCOO:
     return kernel
 
 
-def ensure_sparse(matrix):
-    """Converts a sparse scipy matrix to a jax BCOO"""
-    return BCOO.from_scipy_sparse(matrix) if matrix is not None else None
-
-
 def compute_base_kernel(
     config: HDMConfig,
     data_samples: list[np.ndarray],
@@ -48,6 +43,9 @@ def compute_base_kernel(
 
     if base_distances is None and base_kernel is None:
         base_distances = compute_base_distances(config, data_samples)
+
+    if base_distances is not None:
+        base_distances = threshold_sparsify(base_distances, config.base_sparsity)
 
     if base_kernel is None:
         base_kernel = compute_kernel(base_distances, config.base_epsilon)
@@ -67,6 +65,9 @@ def compute_fiber_kernel(
 
     if fiber_distances is None and fiber_kernel is None:
         fiber_distances = compute_base_distances(config, data_samples)
+
+    if fiber_distances is not None:
+        fiber_distances = threshold_sparsify(fiber_distances, config.fiber_sparsity)
 
     if fiber_kernel is None:
         fiber_kernel = compute_kernel(fiber_distances, config.fiber_epsilon)
