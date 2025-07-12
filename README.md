@@ -60,10 +60,10 @@ The `HDMConfig` class provides configuration parameters for controlling kernel c
   Bandwidth parameter for the fiber kernel.
 
 - `num_eigenvectors` (int, default=4)  
-  Number of eigenvectors (diffusion coordinates) to compute.
+  Number of eigenvectors (dimension of embedding) to compute.
 
 - `device` (str or None, default="CPU")  
-  Device to run computations on (e.g., `"CPU"` or `"GPU"`). Set to `None` to use default.
+  Device to run computations on (e.g., `"CPU"` or `"GPU"`).
 
 - `base_metric` (str, default="frobenius")  
   Metric used for base kernel distance computations.
