@@ -35,6 +35,4 @@ points = HDM.hdm_embed(
     base_distances = base_distances,
 )
 
-np.save("hdm_coords", points)
-
 visualize(points[:, :3])
