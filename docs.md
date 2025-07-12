@@ -1,44 +1,111 @@
-## Installation
-To install the latest development version of `HDM_Python` run:
-```bash
-pip install git+https://github.com/frisbro303/HDM_Python
+<a id="HDM/"></a>
+
+# HDM/
+
+<a id="HDM/.distances"></a>
+
+# HDM/.distances
+
+<a id="HDM/.HDM"></a>
+
+# HDM/.HDM
+
+<a id="HDM/.HDM.hdm_embed"></a>
+
+#### hdm\_embed
+
+```python
+def hdm_embed(data_samples: list[np.ndarray],
+              config: HDMConfig = HDMConfig(),
+              base_kernel: Optional[coo_matrix] = None,
+              fiber_kernel: Optional[coo_matrix] = None,
+              base_distances: Optional[coo_matrix] = None,
+              fiber_distances: Optional[coo_matrix] = None) -> np.ndarray
 ```
-If running on gpu, then install pytorch or/and cupy depending on which gpu versions you run. Note cupy requires nvidia gpu
 
-# Running HDM on platyrrhine teeth
 
-In order to run, add the data prepared by Rob. The data directory should be inside HDM_Python, and needs to be named "platyrrhine".
-The platyrrhine folder should contain:
 
-- Names.mat
-- FinalDist.mat
-- softMapMatrix.mat
-- ReparametrizedOFF with the .off files inside.
+<a id="HDM/.tests.test_hdm"></a>
 
-By running `python src/run_HDM_teeth_CPU.py` from within the src folder, you should get the pringle below.
+# HDM/.tests.test\_hdm
 
-Proof of Concept Pringle (PCP):
+<a id="HDM/.tests.utils"></a>
 
-![](pringle.png)
+# HDM/.tests.utils
 
-# Backends
+<a id="HDM/.block_mul"></a>
 
-## CPU
+# HDM/.block\_mul
 
-This version uses numpy, and is mainly single threaded
-**Time:** `python src/run_HDM_teeth_CPU.py: 308.21s user 1.61s system 1105% cpu 28.018 total`
+<a id="HDM/.visualize"></a>
 
-## GPU PyTorch
+# HDM/.visualize
 
-Pytorch is used, however due to poor sparse eigendecomposition support, it is rather slow.
-**Time:** `python src/run_HDM_teeth_GPU_PyTorch.py  63.32s user 2.86s system 186% cpu 35.568 total`
+<a id="HDM/.validate"></a>
 
-## GPU PyTorch + CuPy
+# HDM/.validate
 
-In an attempt to circumvent PyTorch's poor sparse eigendecomposition support, a hybrid version was made that uses CuPy for the eigendecomposition, speeding it up substantially. However there is overhead due to conversions between them.
-**Time:** `python src/run_HDM_teeth_GPU_PyTorch_CuPy.py  40.65s user 1.52s system 303% cpu 13.876 total`
+<a id="HDM/.utils"></a>
 
-## GPU CuPy (Recommended)
+# HDM/.utils
 
-A version using CuPy was made, due to its good support for sparse operations. This backend ended up being the fastest
-**Time:** `python src/run_HDM_teeth_GPU_CuPy.py  13.77s user 1.85s system 133% cpu 11.703 total`
+<a id="HDM/.utils.ensure_sparse"></a>
+
+#### ensure\_sparse
+
+```python
+def ensure_sparse(matrix)
+```
+
+Converts a sparse scipy matrix to a jax BCOO
+
+<a id="HDM/.utils.compute_block_indices"></a>
+
+#### compute\_block\_indices
+
+```python
+def compute_block_indices(data_samples: list) -> jnp.ndarray
+```
+
+Compute cumulative start indices for a list of data samples.
+
+<a id="HDM/.kernels"></a>
+
+# HDM/.kernels
+
+<a id="HDM/.kernels.compute_base_kernel"></a>
+
+#### compute\_base\_kernel
+
+```python
+def compute_base_kernel(config: HDMConfig, data_samples: list[np.ndarray],
+                        base_distances: BCOO, base_kernel: BCOO)
+```
+
+
+
+<a id="HDM/.kernels.compute_fiber_kernel"></a>
+
+#### compute\_fiber\_kernel
+
+```python
+def compute_fiber_kernel(config: HDMConfig, data_samples: list[np.ndarray],
+                         fiber_distances: BCOO, fiber_kernel: BCOO)
+```
+
+
+
+<a id="HDM/.spectral"></a>
+
+# HDM/.spectral
+
+<a id="HDM/.spectral.eigendecomposition"></a>
+
+#### eigendecomposition
+
+```python
+def eigendecomposition(matrix: sparse.csr_matrix,
+                       num_eigenvectors: int) -> tuple[np.ndarray, np.ndarray]
+```
+
+Perform eigendecomposition on a sparse matrix.
