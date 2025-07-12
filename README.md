@@ -7,6 +7,12 @@ To install the latest development version of `HDM_Python` run:
 pip install git+https://github.com/frisbro303/HDM_Python
 ```
 
+## Usage
+
+
+
+Detailed usage documentation is found in [docs](docs.md)
+
 ## Main Function: `hdm_embed`
 
 The primary interface to the package is the `hdm_embed` function which computes the Horizontal Diffusion Map (HDM) embedding of fiber bundle data.
