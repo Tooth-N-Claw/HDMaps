@@ -64,6 +64,12 @@
 
             </li>
             <li>
+                    <a class="function" href="#ensure_sparse">ensure_sparse</a>
+            </li>
+            <li>
+                    <a class="function" href="#threshold_sparsify">threshold_sparsify</a>
+            </li>
+            <li>
                     <a class="function" href="#compute_block_indices">compute_block_indices</a>
             </li>
             <li>
@@ -105,24 +111,37 @@
 </span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;CPU&quot;</span>
 </span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>    <span class="n">base_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;frobenius&quot;</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>    <span class="n">fiber_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="n">base_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="n">fiber_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="n">base_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="n">fiber_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>
 </span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="k">def</span><span class="w"> </span><span class="nf">compute_block_indices</span><span class="p">(</span><span class="n">data_samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute cumulative start indices for a list of data samples.&quot;&quot;&quot;</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="n">lengths</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data_samples</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)])</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="k">def</span><span class="w"> </span><span class="nf">ensure_sparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a sparse scipy matrix to a jax BCOO&quot;&quot;&quot;</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="k">return</span> <span class="n">BCOO</span><span class="o">.</span><span class="n">from_scipy_sparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="k">if</span> <span class="n">matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>
 </span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="k">def</span><span class="w"> </span><span class="nf">bcoo_to_csr</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">BCOO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">csr_matrix</span><span class="p">:</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>    <span class="n">matrix</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>    <span class="k">return</span> <span class="n">matrix</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a><span class="k">def</span><span class="w"> </span><span class="nf">threshold_sparsify</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="n">mask</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">data</span> <span class="o">&lt;=</span> <span class="n">threshold</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="n">new_data</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">new_indices</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:]</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="n">new_matrix</span> <span class="o">=</span> <span class="n">BCOO</span><span class="p">((</span><span class="n">new_data</span><span class="p">,</span> <span class="n">new_indices</span><span class="p">),</span> <span class="n">shape</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>    <span class="k">return</span> <span class="n">new_matrix</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>    
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="k">def</span><span class="w"> </span><span class="nf">compute_block_indices</span><span class="p">(</span><span class="n">data_samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute cumulative start indices for a list of data samples.&quot;&quot;&quot;</span>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>    <span class="n">lengths</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data_samples</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a>    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)])</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="k">def</span><span class="w"> </span><span class="nf">bcoo_to_csr</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">BCOO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">csr_matrix</span><span class="p">:</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>    <span class="n">matrix</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a>    <span class="k">return</span> <span class="n">matrix</span>
 </span></pre></div>
 
 
@@ -145,8 +164,8 @@
 </span><span id="HDMConfig-14"><a href="#HDMConfig-14"><span class="linenos">14</span></a>    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;CPU&quot;</span>
 </span><span id="HDMConfig-15"><a href="#HDMConfig-15"><span class="linenos">15</span></a>    <span class="n">base_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;frobenius&quot;</span>
 </span><span id="HDMConfig-16"><a href="#HDMConfig-16"><span class="linenos">16</span></a>    <span class="n">fiber_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span>
-</span><span id="HDMConfig-17"><a href="#HDMConfig-17"><span class="linenos">17</span></a>    <span class="n">base_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>
-</span><span id="HDMConfig-18"><a href="#HDMConfig-18"><span class="linenos">18</span></a>    <span class="n">fiber_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>
+</span><span id="HDMConfig-17"><a href="#HDMConfig-17"><span class="linenos">17</span></a>    <span class="n">base_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>
+</span><span id="HDMConfig-18"><a href="#HDMConfig-18"><span class="linenos">18</span></a>    <span class="n">fiber_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>
 </span></pre></div>
 
 
@@ -157,7 +176,7 @@
                             <div id="HDMConfig.__init__" class="classattr">
                                 <div class="attr function">
             
-        <span class="name">HDMConfig</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">base_epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.04</span>,</span><span class="param">	<span class="n">fiber_epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>,</span><span class="param">	<span class="n">num_eigenvectors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>,</span><span class="param">	<span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s1">&#39;CPU&#39;</span>,</span><span class="param">	<span class="n">base_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;frobenius&#39;</span>,</span><span class="param">	<span class="n">fiber_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;euclidean&#39;</span>,</span><span class="param">	<span class="n">base_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>,</span><span class="param">	<span class="n">fiber_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span></span>)</span>
+        <span class="name">HDMConfig</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="n">base_epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.04</span>,</span><span class="param">	<span class="n">fiber_epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.08</span>,</span><span class="param">	<span class="n">num_eigenvectors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>,</span><span class="param">	<span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s1">&#39;CPU&#39;</span>,</span><span class="param">	<span class="n">base_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;frobenius&#39;</span>,</span><span class="param">	<span class="n">fiber_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;euclidean&#39;</span>,</span><span class="param">	<span class="n">base_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span>,</span><span class="param">	<span class="n">fiber_sparsity</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span></span>)</span>
 
         
     </div>
@@ -273,6 +292,51 @@
 
                             </div>
                 </section>
+                <section id="ensure_sparse">
+                            <input id="ensure_sparse-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">ensure_sparse</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">matrix</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="ensure_sparse-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#ensure_sparse"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="ensure_sparse-21"><a href="#ensure_sparse-21"><span class="linenos">21</span></a><span class="k">def</span><span class="w"> </span><span class="nf">ensure_sparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
+</span><span id="ensure_sparse-22"><a href="#ensure_sparse-22"><span class="linenos">22</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a sparse scipy matrix to a jax BCOO&quot;&quot;&quot;</span>
+</span><span id="ensure_sparse-23"><a href="#ensure_sparse-23"><span class="linenos">23</span></a>    <span class="k">return</span> <span class="n">BCOO</span><span class="o">.</span><span class="n">from_scipy_sparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="k">if</span> <span class="n">matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Converts a sparse scipy matrix to a jax BCOO</p>
+</div>
+
+
+                </section>
+                <section id="threshold_sparsify">
+                            <input id="threshold_sparsify-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">threshold_sparsify</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">matrix</span>, </span><span class="param"><span class="n">threshold</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="threshold_sparsify-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#threshold_sparsify"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="threshold_sparsify-26"><a href="#threshold_sparsify-26"><span class="linenos">26</span></a><span class="k">def</span><span class="w"> </span><span class="nf">threshold_sparsify</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span id="threshold_sparsify-27"><a href="#threshold_sparsify-27"><span class="linenos">27</span></a>    <span class="n">mask</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">data</span> <span class="o">&lt;=</span> <span class="n">threshold</span>
+</span><span id="threshold_sparsify-28"><a href="#threshold_sparsify-28"><span class="linenos">28</span></a>    <span class="n">new_data</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+</span><span id="threshold_sparsify-29"><a href="#threshold_sparsify-29"><span class="linenos">29</span></a>    <span class="n">new_indices</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:]</span>
+</span><span id="threshold_sparsify-30"><a href="#threshold_sparsify-30"><span class="linenos">30</span></a>    <span class="n">new_matrix</span> <span class="o">=</span> <span class="n">BCOO</span><span class="p">((</span><span class="n">new_data</span><span class="p">,</span> <span class="n">new_indices</span><span class="p">),</span> <span class="n">shape</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span><span id="threshold_sparsify-31"><a href="#threshold_sparsify-31"><span class="linenos">31</span></a>    <span class="k">return</span> <span class="n">new_matrix</span>
+</span></pre></div>
+
+
+    
+
+                </section>
                 <section id="compute_block_indices">
                             <input id="compute_block_indices-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
@@ -284,10 +348,10 @@
 
     </div>
     <a class="headerlink" href="#compute_block_indices"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="compute_block_indices-21"><a href="#compute_block_indices-21"><span class="linenos">21</span></a><span class="k">def</span><span class="w"> </span><span class="nf">compute_block_indices</span><span class="p">(</span><span class="n">data_samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-</span><span id="compute_block_indices-22"><a href="#compute_block_indices-22"><span class="linenos">22</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute cumulative start indices for a list of data samples.&quot;&quot;&quot;</span>
-</span><span id="compute_block_indices-23"><a href="#compute_block_indices-23"><span class="linenos">23</span></a>    <span class="n">lengths</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data_samples</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-</span><span id="compute_block_indices-24"><a href="#compute_block_indices-24"><span class="linenos">24</span></a>    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)])</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="compute_block_indices-34"><a href="#compute_block_indices-34"><span class="linenos">34</span></a><span class="k">def</span><span class="w"> </span><span class="nf">compute_block_indices</span><span class="p">(</span><span class="n">data_samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+</span><span id="compute_block_indices-35"><a href="#compute_block_indices-35"><span class="linenos">35</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute cumulative start indices for a list of data samples.&quot;&quot;&quot;</span>
+</span><span id="compute_block_indices-36"><a href="#compute_block_indices-36"><span class="linenos">36</span></a>    <span class="n">lengths</span> <span class="o">=</span> <span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data_samples</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+</span><span id="compute_block_indices-37"><a href="#compute_block_indices-37"><span class="linenos">37</span></a>    <span class="k">return</span> <span class="n">jnp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">jnp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">jnp</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="n">jnp</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)])</span>
 </span></pre></div>
 
 
@@ -307,14 +371,14 @@
 
     </div>
     <a class="headerlink" href="#bcoo_to_csr"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="bcoo_to_csr-27"><a href="#bcoo_to_csr-27"><span class="linenos">27</span></a><span class="k">def</span><span class="w"> </span><span class="nf">bcoo_to_csr</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">BCOO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">csr_matrix</span><span class="p">:</span>
-</span><span id="bcoo_to_csr-28"><a href="#bcoo_to_csr-28"><span class="linenos">28</span></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-</span><span id="bcoo_to_csr-29"><a href="#bcoo_to_csr-29"><span class="linenos">29</span></a>    <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-</span><span id="bcoo_to_csr-30"><a href="#bcoo_to_csr-30"><span class="linenos">30</span></a>    <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
-</span><span id="bcoo_to_csr-31"><a href="#bcoo_to_csr-31"><span class="linenos">31</span></a>
-</span><span id="bcoo_to_csr-32"><a href="#bcoo_to_csr-32"><span class="linenos">32</span></a>    <span class="n">matrix</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-</span><span id="bcoo_to_csr-33"><a href="#bcoo_to_csr-33"><span class="linenos">33</span></a>
-</span><span id="bcoo_to_csr-34"><a href="#bcoo_to_csr-34"><span class="linenos">34</span></a>    <span class="k">return</span> <span class="n">matrix</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="bcoo_to_csr-40"><a href="#bcoo_to_csr-40"><span class="linenos">40</span></a><span class="k">def</span><span class="w"> </span><span class="nf">bcoo_to_csr</span><span class="p">(</span><span class="n">matrix</span><span class="p">:</span> <span class="n">BCOO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">csr_matrix</span><span class="p">:</span>
+</span><span id="bcoo_to_csr-41"><a href="#bcoo_to_csr-41"><span class="linenos">41</span></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+</span><span id="bcoo_to_csr-42"><a href="#bcoo_to_csr-42"><span class="linenos">42</span></a>    <span class="n">row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+</span><span id="bcoo_to_csr-43"><a href="#bcoo_to_csr-43"><span class="linenos">43</span></a>    <span class="n">col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">matrix</span><span class="o">.</span><span class="n">indices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span id="bcoo_to_csr-44"><a href="#bcoo_to_csr-44"><span class="linenos">44</span></a>
+</span><span id="bcoo_to_csr-45"><a href="#bcoo_to_csr-45"><span class="linenos">45</span></a>    <span class="n">matrix</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">((</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span><span id="bcoo_to_csr-46"><a href="#bcoo_to_csr-46"><span class="linenos">46</span></a>
+</span><span id="bcoo_to_csr-47"><a href="#bcoo_to_csr-47"><span class="linenos">47</span></a>    <span class="k">return</span> <span class="n">matrix</span>
 </span></pre></div>
 
 
