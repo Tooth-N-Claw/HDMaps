@@ -25,7 +25,7 @@ def hdm_embed(
     fiber_kernel: Optional[coo_matrix] = None,
     base_distances: Optional[coo_matrix] = None,
     fiber_distances: Optional[coo_matrix] = None,
-) -> jnp.ndarray:
+) -> np.ndarray:
     """"""    
     validate_config(config)
     validate_data(data_samples)
