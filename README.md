@@ -11,7 +11,7 @@ pip install git+https://github.com/frisbro303/HDM_Python
 
 
 
-Detailed usage documentation is found in [docs.md].
+Detailed usage documentation is found in docs.md.
 
 ## Main Function: `hdm_embed`
 
