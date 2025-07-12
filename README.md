@@ -9,8 +9,6 @@ pip install git+https://github.com/frisbro303/HDM_Python
 
 ## Usage
 
-
-
 Detailed usage documentation is found in [docs.md](docs.md).
 
 ##
