@@ -11,10 +11,6 @@ pip install git+https://github.com/frisbro303/HDM_Python
 
 Detailed usage documentation is found in [docs.md](docs.md).
 
-##
-
-For more advanced usage or reference, se the [full API documentation](https://frisbro303.github.io/HDM_Python/).
-
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
