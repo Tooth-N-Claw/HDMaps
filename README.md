@@ -7,9 +7,10 @@ To install the latest development version of `HDM_Python` run:
 pip install git+https://github.com/frisbro303/HDM_Python
 ```
 
-## Usage
-
-Detailed usage documentation is found in [docs.md](docs.md).
+## Usage and Documentation
+The package provides an accessible implementation of Horizontal Diffusion Maps as conceived in the paper "[The diffusion geometry of fibre bundles: Horizontal diffusion maps]"(https://www.sciencedirect.com/science/article/pii/S1063520318302215)
+The package is suitable for various applications and is designed to be easily configurable.
+Comprehensive usage instructions can be found in the [docs.md](docs.md).
 
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
