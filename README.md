@@ -1,7 +1,6 @@
 # HDM_Python
 [![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
 
-
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
@@ -90,6 +89,9 @@ config = HDMConfig(
     fiber_sparsity=0.1,
 )
 ```
+##
+
+For more advanced usage or reference, se the [full API documentation](https://frisbro303.github.io/HDM_Python/).
 
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
