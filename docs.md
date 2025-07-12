@@ -1,7 +1,15 @@
+# HDM_Python
+[![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
 
-## Main Function: `hdm_embed`
+## Installation
+To install the latest development version of `HDM_Python` run:
+```bash
+pip install git+https://github.com/frisbro303/HDM_Python
+```
 
-The primary interface to the package is the `hdm_embed` function which computes the Horizontal Diffusion Map (HDM) embedding of fiber bundle data.
+## Usage
+
+The primary interface to the package is the `hdm_embed` function which computes the Horizontal Diffusion Map (HDM) embedding of fiber bundle data. It is designed to handle custom configurations to suit a broard variety of applications.
 
 ```python
 def hdm_embed(
@@ -81,3 +89,13 @@ config = HDMConfig(
     fiber_sparsity=0.1,
 )
 ```
+
+
+## License
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+This software is licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/frisbro303/SignDNE/blob/2347bf47a35affe612ac8d60e64805a3f1891951/LICENSE) file for details. 
+
+
+
+
