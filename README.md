@@ -12,7 +12,7 @@ The package provides an accessible implementation of Horizontal Diffusion Maps, 
 
 The package is suitable for various applications and is designed to be easily configurable.
 
-Comprehensive usage instructions is found in [docs.md](docs.md).
+Detailed usage instructions is found in [docs.md](docs.md).
 
 ## License
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
