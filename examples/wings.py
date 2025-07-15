@@ -1,0 +1,39 @@
+import os
+import numpy as np
+import pyvista as pv
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import Normalize
+
+from HDM import hdm_embed, HDMConfig
+
+directory_path = 'extrapolate/'
+files = [f for f in os.listdir(directory_path) if f.endswith('.txt')]
+files = files[:100]
+data_samples = [np.loadtxt(os.path.join(directory_path, file), delimiter=',') for file in files]
+
+sample_length = len(data_samples[0])
+num_samples = len(data_samples)
+
+config = HDMConfig(
+    base_epsilon = 0.004,
+    fiber_epsilon = 0.0006,
+)
+
+diffusion_coords = hdm_embed(
+    data_samples = data_samples,
+    config = config
+)
+
+point_cloud = pv.PolyData(diffusion_coords[:, :3])
+plotter = pv.Plotter()
+
+scalars = np.tile(np.arange(sample_length), num_samples)
+cmap = plt.get_cmap("rainbow", sample_length)
+norm = Normalize(vmin=0, vmax=sample_length-1)
+
+plotter.add_mesh(point_cloud, scalars=scalars, point_size=10, 
+                 render_points_as_spheres=True, cmap="rainbow", 
+                 clim=[0, sample_length-1], show_scalar_bar=False)
+
+plotter.show()
