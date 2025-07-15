@@ -8,6 +8,10 @@ pip install git+https://github.com/frisbro303/HDM_Python
 ```
 
 ## Usage
+To get started using HDM_Python, add the following imports to the top of your Python file:
+```python
+from HDM import hdm_embed, HDMConfig
+```
 
 The primary interface to the package is the `hdm_embed` function which computes the Horizontal Diffusion Map (HDM) embedding of fiber bundle data. It is designed to handle custom configurations to suit a broard variety of applications.
 
