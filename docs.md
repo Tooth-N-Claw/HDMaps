@@ -16,23 +16,36 @@ from HDM import hdm_embed, HDMConfig
 The primary interface to the package is the `hdm_embed` function which computes the Horizontal Diffusion Map (HDM) embedding. It is designed to handle custom configurations to suit a broard variety of applications. Configuration of HDM happens by creating an instance of the namedtuple `HDMConfig`.
 
 ```python
-Compute the Horizontal Diffusion Maps (HDM) embedding from input data.
+def hdm_embed(
+    config: HDMConfig = HDMConfig(),
+    data_samples: Optional[list[np.ndarray]] = None,
+    block_indices: Optional[np.ndarray] = None,
+    base_kernel: Optional[coo_matrix] = None,
+    fiber_kernel: Optional[coo_matrix] = None,
+    base_distances: Optional[coo_matrix] = None,
+    fiber_distances: Optional[coo_matrix] = None,
+) -> np.ndarray:
 
-This function constructs and processes base and fiber kernels from the input data or 
-precomputed distances/kernels, normalizes the resulting joint kernel, and computes 
-a HDM embedding.
+    """
+    Compute the Horizontal Diffusion Maps (HDM) embedding from input data.
 
-Parameters:
-    config (HDMConfig): Configuration object specifying HDM parameters.
-    data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
-    block_indices (np.ndarray, optional): Block indices specifying data partitioning.
-    base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
-    fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
-    base_distances (coo_matrix, optional): Precomputed base distances.
-    fiber_distances (coo_matrix, optional): Precomputed fiber distances.
+    This function constructs and processes base and fiber kernels from the input data or 
+    precomputed distances/kernels, normalizes the resulting joint kernel, and computes 
+    a HDM embedding.
 
-Returns:
-    np.ndarray: Diffusion coordinates from the joint HDM embedding.
+    Parameters:
+        config (HDMConfig): Configuration object specifying HDM parameters.
+        data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
+        block_indices (np.ndarray, optional): Block indices specifying data partitioning.
+        base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
+        fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
+        base_distances (coo_matrix, optional): Precomputed base distances.
+        fiber_distances (coo_matrix, optional): Precomputed fiber distances.
+
+    Returns:
+        np.ndarray: Diffusion coordinates from the joint HDM embedding.
+    """
+
 ```
 
 ## Configuration: `HDMConfig`
