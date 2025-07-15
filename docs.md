@@ -8,7 +8,7 @@ pip install git+https://github.com/frisbro303/HDM_Python
 ```
 
 ## Usage
-To get started using HDM_Python, add the following imports to the top of your Python file:
+To get started using HDM_Python, add the following import to the top of your Python file:
 ```python
 from HDM import hdm_embed, HDMConfig
 ```
