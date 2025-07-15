@@ -9,7 +9,6 @@ from .spatial import (
     compute_joint_kernel,
     normalize_kernel
 )
-from .validate import validate_config, validate_data
 from .utils import compute_block_indices, HDMConfig
 from .spectral import spectral_embedding
  
