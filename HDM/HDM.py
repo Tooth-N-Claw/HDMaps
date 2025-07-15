@@ -23,8 +23,26 @@ def hdm_embed(
     base_distances: Optional[coo_matrix] = None,
     fiber_distances: Optional[coo_matrix] = None,
 ) -> np.ndarray:
-    """Compute HDM embedding with partial input handling."""
 
+    """
+    Compute the Horizontal Diffusion Maps (HDM) embedding from input data.
+
+    This function constructs and processes base and fiber kernels from the input data or 
+    precomputed distances/kernels, normalizes the resulting joint kernel, and computes 
+    a HDM embedding.
+
+    Parameters:
+        config (HDMConfig): Configuration object specifying HDM parameters.
+        data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
+        block_indices (np.ndarray, optional): Block indices specifying data partitioning.
+        base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
+        fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
+        base_distances (coo_matrix, optional): Precomputed base distances.
+        fiber_distances (coo_matrix, optional): Precomputed fiber distances.
+
+    Returns:
+        np.ndarray: Diffusion coordinates from the joint HDM embedding.
+    """
     if block_indices is None and data_samples is not None:
         block_indices = compute_block_indices(data_samples)       
 
