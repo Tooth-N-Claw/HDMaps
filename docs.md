@@ -4,7 +4,6 @@
 **A Python implementation of Horizontal Diffusion Maps (HDM), a manifold learning framework for data analysis of datasets with base-fiber structure.**
 
 
-
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
@@ -20,7 +19,20 @@ To get started using HDM_Python, add the following import to the top of your Pyt
 from HDM import hdm_embed, HDMConfig
 ```
 
-The primary interface to the package is the `hdm_embed` function which computes the Horizontal Diffusion Map (HDM) embedding. It is designed to handle custom configurations to suit a broard variety of applications. Configuration of HDM happens by creating an instance of the namedtuple `HDMConfig`.
+The primary interface of the package is the `hdm_embed` function, which embeds the data in a Euclidean space preserving the horizontal diffusion distance.  
+The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide precomputed distances or kernels.  
+
+The table below details the possible input combinations:
+
+| Input Provided              | block_indices    | base_kernel               | fiber_kernel              | Notes                         |
+|----------------------------|------------------|---------------------------|---------------------------|-------------------------------|
+| `data_samples` only         | Auto-computed    | Computed                  | Computed                  | Easiest all-in-one usage       |
+| `data_samples` + distances  | Auto-computed    | Computed from distances   | Computed from distances   | Skip distance recomputation    |
+| Precomputed kernels only    | Must provide     | Used                      | Used                      | Fully custom kernel path       |
+| Partial kernel override     | Auto-computed    | As given or computed      | As given or computed      | Customize part of the pipeline |
+
+---
+
 
 ```python
 def hdm_embed(
@@ -54,6 +66,10 @@ def hdm_embed(
     """
 
 ```
+
+The function can be used in one of the following ways:
+- The user can provide data_samples, which is a list of sampled fibers not necesarily of equal shape. 
+
 
 ## Configuration
 
