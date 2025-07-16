@@ -20,20 +20,10 @@ from HDM import hdm_embed, HDMConfig
 ```
 
 The primary interface of the package is the `hdm_embed` function, which embeds the data in a Euclidean space preserving the horizontal diffusion distance.  
-The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide precomputed distances or kernels.  
-
-The table below gives an overview of possible input combinations:
+The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide either precomputed distances or kernels, or a mix of these.
 
 
-| Inputs Provided                            | block_indices           | base_kernel             | fiber_kernel            | Notes                                   |
-|-------------------------------------------|------------------------|------------------------|-------------------------|----------------------------------------|
-| `data_samples` + optional `block_indices` | Optional (auto-computed if missing) | Computed from data     | Computed from data      | Default usage; everything computed     |
-| `data_samples` + base & fiber distances + optional `block_indices` | Optional (auto-computed if missing) | Computed from distances| Computed from distances | Use precomputed distances               |
-| `data_samples` + base/kernel mix + optional `block_indices` | Optional (auto-computed if missing) | Mixed computed/used    | Mixed computed/used     | Partial kernel overrides allowed       |
-| `base_kernel` + `fiber_kernel` + `block_indices` | **Required**          | Used as-is             | Used as-is              | Fully precomputed kernels & partition  |
-| `data_samples` + base_distances + fiber_kernel + optional `block_indices` | Optional (auto-computed if missing) | Computed from distances| Used as-is | Hybrid: precomputed base, provided fiber kernel |
-| `data_samples` + fiber_distances + base_kernel + optional `block_indices` | Optional (auto-computed if missing) | Used as-is             | Computed from distances | Hybrid: precomputed fiber, provided base kernel |
-
+**Important:** Distances and block indices are computed automatically only if `data_samples` are provided. If `data_samples` are omitted, precomputed kernels and block indices must be supplied explicitly.
 
 
 ```python
