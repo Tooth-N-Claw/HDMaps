@@ -20,12 +20,7 @@ To get started using HDM_Python, add the following import to the top of your Pyt
 from HDM import hdm_embed, HDMConfig
 ```
 ### The `hdm_embed`function
-The primary interface of the package is the `hdm_embed` function, which embeds the data in a Euclidean space preserving the horizontal diffusion distance.  
-The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide either precomputed distances or kernels, or a mix of these.
-
-
-**Important:** Distances and block indices are computed automatically only if `data_samples` are provided. If `data_samples` are omitted, precomputed kernels and block indices must be supplied explicitly.
-
+The primary interface of the package is the `hdm_embed` function, which embeds the data in a Euclidean space preserving the horizontal diffusion distance. The function signature is given below:
 
 ```python
 def hdm_embed(
@@ -59,6 +54,12 @@ def hdm_embed(
     """
 
 ```
+The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide either precomputed distances or kernels, or a mix of these.
+
+
+**Important:** Distances and block indices are computed automatically only if `data_samples` are provided. If `data_samples` are omitted, precomputed kernels and block indices must be supplied explicitly.
+
+See the [examples](https://github.com/frisbro303/HDM_Python/tree/main/examples) folder for usage demonstrations.
 
 
 ### Configuration
