@@ -1,6 +1,6 @@
 # HDM_Python
 [![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
-
+**A Python implementation of Horizontal Diffusion Maps (HDM), a manifold learning framework for data analysis of datasets with base-fiber structure.**
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
