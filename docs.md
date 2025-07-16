@@ -22,16 +22,22 @@ from HDM import hdm_embed, HDMConfig
 The primary interface of the package is the `hdm_embed` function, which embeds the data in a Euclidean space preserving the horizontal diffusion distance.  
 The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide precomputed distances or kernels.  
 
-The table below details the possible input combinations:
+The table below gives an overview of possible input combinations:
 
-| Input Provided              | block_indices    | base_kernel               | fiber_kernel              | Notes                         |
-|----------------------------|------------------|---------------------------|---------------------------|-------------------------------|
-| `data_samples` only         | Auto-computed    | Computed                  | Computed                  | Easiest all-in-one usage       |
-| `data_samples` + distances  | Auto-computed    | Computed from distances   | Computed from distances   | Skip distance recomputation    |
-| Precomputed kernels only    | Must provide     | Used                      | Used                      | Fully custom kernel path       |
-| Partial kernel override     | Auto-computed    | As given or computed      | As given or computed      | Customize part of the pipeline |
+| Inputs Provided                              | block_indices         | base_kernel                    | fiber_kernel                  | Notes / Behavior                                                    |
+|---------------------------------------------|----------------------|-------------------------------|-------------------------------|-------------------------------------------------------------------|
+| `data_samples` only                          | Auto-computed        | Computed (from data_samples)  | Computed (from data_samples)  | Default, simplest: kernels and block indices computed internally  |
+| `data_samples` + `block_indices`             | Provided             | Computed                      | Computed                      | Use provided block_indices instead of computing them              |
+| `data_samples` + base and fiber distances   | Auto-computed        | Computed (from distances)     | Computed (from distances)     | Speeds up kernel computations using precomputed distances         |
+| `data_samples` + base_kernel + fiber_kernel | Auto-computed        | Used (provided)               | Used (provided)               | Custom kernels provided; block_indices computed from data_samples |
+| `data_samples` + base_kernel + fiber_kernel + block_indices | Provided | Used (provided)               | Used (provided)               | Fully specified kernels and partitioning                          |
+| Only base_kernel + fiber_kernel + block_indices | Provided           | Used (provided)               | Used (provided)               | No raw data; full control over kernels and blocks                  |
+| `data_samples` + only base_distances + fiber_kernel | Auto-computed | Computed (from base_distances) | Used (provided)              | Mixed precomputed base kernel, provided fiber kernel              |
+| `data_samples` + only fiber_distances + base_kernel | Auto-computed | Used (provided)               | Computed (from fiber_distances)| Mixed precomputed fiber kernel, provided base kernel              |
+| `data_samples` + only base_distances         | Auto-computed        | Computed (from base_distances) | Computed (from data_samples)  | Only base kernel from distances, fiber kernel computed normally   |
+| `data_samples` + only fiber_distances        | Auto-computed        | Computed (from data_samples)  | Computed (from fiber_distances)| Only fiber kernel from distances, base kernel computed normally   |
+| Only `data_samples` + block_indices          | Provided             | Computed                      | Computed                      | Override block_indices while computing kernels                     |
 
----
 
 
 ```python
