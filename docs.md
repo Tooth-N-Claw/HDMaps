@@ -24,19 +24,16 @@ The embedding can be computed entirely from given data samples based on custom b
 
 The table below gives an overview of possible input combinations:
 
-| Inputs Provided                              | block_indices         | base_kernel                    | fiber_kernel                  | Notes / Behavior                                                    |
-|---------------------------------------------|----------------------|-------------------------------|-------------------------------|-------------------------------------------------------------------|
-| `data_samples` only                          | Auto-computed        | Computed (from data_samples)  | Computed (from data_samples)  | Default, simplest: kernels and block indices computed internally  |
-| `data_samples` + `block_indices`             | Provided             | Computed                      | Computed                      | Use provided block_indices instead of computing them              |
-| `data_samples` + base and fiber distances   | Auto-computed        | Computed (from distances)     | Computed (from distances)     | Speeds up kernel computations using precomputed distances         |
-| `data_samples` + base_kernel + fiber_kernel | Auto-computed        | Used (provided)               | Used (provided)               | Custom kernels provided; block_indices computed from data_samples |
-| `data_samples` + base_kernel + fiber_kernel + block_indices | Provided | Used (provided)               | Used (provided)               | Fully specified kernels and partitioning                          |
-| Only base_kernel + fiber_kernel + block_indices | Provided           | Used (provided)               | Used (provided)               | No raw data; full control over kernels and blocks                  |
-| `data_samples` + only base_distances + fiber_kernel | Auto-computed | Computed (from base_distances) | Used (provided)              | Mixed precomputed base kernel, provided fiber kernel              |
-| `data_samples` + only fiber_distances + base_kernel | Auto-computed | Used (provided)               | Computed (from fiber_distances)| Mixed precomputed fiber kernel, provided base kernel              |
-| `data_samples` + only base_distances         | Auto-computed        | Computed (from base_distances) | Computed (from data_samples)  | Only base kernel from distances, fiber kernel computed normally   |
-| `data_samples` + only fiber_distances        | Auto-computed        | Computed (from data_samples)  | Computed (from fiber_distances)| Only fiber kernel from distances, base kernel computed normally   |
-| Only `data_samples` + block_indices          | Provided             | Computed                      | Computed                      | Override block_indices while computing kernels                     |
+
+| Inputs Provided                            | block_indices           | base_kernel             | fiber_kernel            | Notes                                   |
+|-------------------------------------------|------------------------|------------------------|-------------------------|----------------------------------------|
+| `data_samples` only                        | Optional (auto-computed if missing) | Computed from data     | Computed from data      | Default usage; everything computed     |
+| `data_samples` + `block_indices`          | Provided               | Computed from data     | Computed from data      | Use custom partitioning                 |
+| `data_samples` + base & fiber distances   | Optional (auto-computed if missing) | Computed from distances| Computed from distances | Use precomputed distances               |
+| `data_samples` + base/kernel mix           | Optional (auto-computed if missing) | Mixed computed/used    | Mixed computed/used     | Partial kernel overrides allowed       |
+| `base_kernel` + `fiber_kernel` + `block_indices` | **Required**          | Used as-is             | Used as-is              | Fully precomputed kernels & partition  |
+| `data_samples` + base_distances + fiber_kernel | Optional (auto-computed if missing) | Computed from distances| Used as-is              | Hybrid: precomputed base, provided fiber kernel |
+| `data_samples` + fiber_distances + base_kernel | Optional (auto-computed if missing) | Used as-is             | Computed from distances | Hybrid: precomputed fiber, provided base kernel |
 
 
 
