@@ -10,7 +10,7 @@ class HDMConfig(NamedTuple):
     base_epsilon: float = 0.04
     fiber_epsilon: float = 0.08
     num_eigenvectors: int = 4
-    device: str | None = "CPU"
+    device: str | None = "cpu"
     base_metric: str = "frobenius"
     fiber_metric: str = "euclidean"
     base_sparsity: float = 0.08
