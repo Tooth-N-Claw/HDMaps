@@ -7,9 +7,9 @@ from scipy.sparse import load_npz
 from HDM import hdm_embed, HDMConfig
 
 
-fiber_kernel = load_npz("fiber_kernel.npz")
-base_distances = load_npz("base_distances.npz")
-block_indices = np.load("block_indices.npy")
+fiber_kernel = load_npz("example-data/teeth/fiber_kernel.npz")
+base_distances = load_npz("example-data/teeth/base_distances.npz")
+block_indices = np.load("example-data/teeth/block_indices.npy")
 
 
 config = HDMConfig(
