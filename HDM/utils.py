@@ -1,5 +1,4 @@
 import numpy as np
-import jax.numpy as jnp
 from typing import NamedTuple
 
 from jax.experimental.sparse import BCOO
