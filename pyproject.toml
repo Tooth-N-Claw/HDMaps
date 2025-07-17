@@ -17,7 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 license = "GPL-3.0-or-later"
-dependencies = ['scipy', 'jax', 'numpy']
+dependencies = ['scipy', 'numpy', 'scikit-learn']
 
 [project.urls]
 Homepage = "https://github.com/frisbro303/HDM_Python"
