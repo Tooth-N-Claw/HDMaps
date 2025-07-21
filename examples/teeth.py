@@ -3,11 +3,13 @@ import pyvista as pv
 import matplotlib.pyplot as plt
 
 from scipy.sparse import load_npz
+from scipy.io import loadmat
 
-from HDM import hdm_embed, HDMConfig
+from HDM import hdm_embed, HDMConfig, compute_fiber_kernel_from_maps
 
 
-fiber_kernel = load_npz("example-data/teeth/fiber_kernel.npz")
+maps = loadmat("platyrrhine/softMapMatrix.mat")["softMapMatrix"]
+fiber_kernel = compute_fiber_kernel_from_maps(maps)
 base_distances = load_npz("example-data/teeth/base_distances.npz")
 block_indices = np.load("example-data/teeth/block_indices.npy")
 

@@ -1,9 +1,23 @@
 from sklearn.neighbors import NearestNeighbors
-from scipy.sparse import csr_matrix, coo_matrix
+from scipy.sparse import bmat, csr_matrix, coo_matrix
 import numpy as np
 
 
 from .utils import HDMConfig
+
+
+def compute_fiber_kernel_from_maps(maps):
+    num_rows, num_cols = maps.shape
+
+    blocks = [
+        [csr_matrix(maps[i, j]) for j in range(num_cols)]
+        for i in range(num_rows)
+    ]
+
+    fiber_kernel = bmat(blocks, format='csr').tocoo()
+
+    return fiber_kernel
+
 
 
 def compute_base_distances(config: HDMConfig, data_samples: list[np.ndarray]) -> csr_matrix:
