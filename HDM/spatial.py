@@ -19,7 +19,6 @@ def compute_fiber_kernel_from_maps(maps):
     return fiber_kernel
 
 
-
 def compute_base_distances(config: HDMConfig, data_samples: list[np.ndarray]) -> csr_matrix:
     print("Assumes all data samples has same shape")
     data = np.array([sample.flatten() for sample in data_samples])

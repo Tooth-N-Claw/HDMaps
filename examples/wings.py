@@ -13,7 +13,9 @@ files = files[:100]
 data_samples = [np.loadtxt(os.path.join(directory_path, file), delimiter=',') for file in files]
 
 sample_length = len(data_samples[0])
+# print(sample_length)
 num_samples = len(data_samples)
+# num_samples = 4
 
 config = HDMConfig(
     base_epsilon = 0.004,
@@ -33,7 +35,7 @@ cmap = plt.get_cmap("rainbow", sample_length)
 norm = Normalize(vmin=0, vmax=sample_length-1)
 
 plotter.add_mesh(point_cloud, scalars=scalars, point_size=10, 
-                 render_points_as_spheres=True, cmap="rainbow", 
+                 render_points_as_spheres=True, cmap="tab20", 
                  clim=[0, sample_length-1], show_scalar_bar=False)
 
 plotter.show()
