@@ -66,7 +66,8 @@ def compute_base_spatial(config: HDMConfig, data_samples, base_distances, base_k
     if base_distances is None and base_kernel is None:
         base_distances = compute_base_distances(config, data_samples)
     elif base_distances is not None and base_kernel is None:
-        base_distances.data[base_distances.data >= config.base_sparsity] = 0
+        if config.base_sparsity != None:
+            base_distances.data[base_distances.data >= config.base_sparsity] = 0
         base_distances.eliminate_zeros()
 
     if base_kernel is None:
