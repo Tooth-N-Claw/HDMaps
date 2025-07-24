@@ -32,23 +32,8 @@ def compute_clusters(hdm_coords: np.ndarray, num_clusters: int, seed=None) -> np
     return labels
 
 
-def visualize_by_eigenvector(point_cloud, hdm_coords, eigenvector_idx, start_idx=0, title="Eigenvector Visualization"):
-    import numpy as np
-    import pyvista as pv
-
-    plotter = pv.Plotter()
-
-    pv_mesh = pv.PolyData(point_cloud)
-
-    num_vertices = point_cloud.shape[0]
-
-    eigenvector = hdm_coords[start_idx:start_idx + num_vertices, eigenvector_idx]
-
-    pv_mesh.point_data['eigenvector'] = eigenvector
-
-    plotter.add_mesh(pv_mesh, scalars='eigenvector', cmap='jet', show_edges=False)
-    plotter.add_title(title)
-    plotter.show()
+def visualize_by_eigenvectors(mesh, hdm_coords):
+    pass
 
 
 def get_backend(config: HDMConfig):
