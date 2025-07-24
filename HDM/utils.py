@@ -2,7 +2,7 @@ import numpy as np
 from typing import NamedTuple
 from scipy.sparse import csr_matrix
 from sklearn.cluster import KMeans
-
+from scipy.sparse import bmat
 
 class HDMConfig(NamedTuple):
     base_epsilon: float = 0.04
@@ -33,3 +33,27 @@ def compute_clusters(hdm_coords: np.ndarray, num_clusters: int, seed=None) -> np
 
 def visualize_by_eigenvectors(mesh, hdm_coords):
     pass
+
+def get_backend(config: HDMConfig):
+    """Return the appropriate backend based on the configuration."""
+    if config.device == 'cpu':
+        from .cpu import CPU
+        return CPU()
+    elif config.device == 'gpu':
+        from .cupy import CuPy
+        return CuPy()
+    else:
+        raise ValueError(f"Unsupported device: {config.device}")
+    
+    
+def compute_fiber_kernel_from_maps(maps):
+    num_rows, num_cols = maps.shape
+
+    blocks = [
+        [csr_matrix(maps[i, j]) for j in range(num_cols)]
+        for i in range(num_rows)
+    ]
+
+    fiber_kernel = bmat(blocks, format='csr').tocoo()
+
+    return fiber_kernel

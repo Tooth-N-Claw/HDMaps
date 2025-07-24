@@ -4,7 +4,8 @@ from .utils import (
     compute_clusters,
     visualize_by_eigenvectors
 )
-from .spatial import compute_fiber_kernel_from_maps
+
+from .utils import compute_fiber_kernel_from_maps
 
 
 __all__ = [

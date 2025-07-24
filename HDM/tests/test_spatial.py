@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
-from HDM.spatial import compute_joint_kernel  # Ensure this now uses scipy/numpy internally
+from HDM.cpu import compute_joint_kernel  # Ensure this now uses scipy/numpy internally
 
 
 def test_compute_joint_kernel():
