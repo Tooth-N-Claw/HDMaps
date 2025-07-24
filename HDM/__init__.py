@@ -2,7 +2,7 @@ from .HDM import hdm_embed
 from .utils import (
     HDMConfig,
     compute_clusters,
-    visualize_by_eigenvectors
+    visualize_by_eigenvector
 )
 
 from .utils import compute_fiber_kernel_from_maps
@@ -13,5 +13,5 @@ __all__ = [
     'HDMConfig',
     'compute_fiber_kernel_from_maps',
     'compute_clusters',
-    'visualize_by_eigenvectors'
+    'visualize_by_eigenvector'
 ]
