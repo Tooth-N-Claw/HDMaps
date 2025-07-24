@@ -39,7 +39,6 @@ def hdm_embed(
         np.ndarray: Diffusion coordinates from the joint HDM embedding.
     """
     
-    print("start")
     base_kernel = compute_base_spatial(config, data_samples, base_distances, base_kernel)
     print("Compute base kernel: Done.")
 

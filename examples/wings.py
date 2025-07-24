@@ -20,6 +20,11 @@ num_samples = len(data_samples)
 config = HDMConfig(
     base_epsilon = 0.004,
     fiber_epsilon = 0.0006,
+    base_sparsity = 0.08,
+    base_knn = None,
+    fiber_sparsity = 0.08,
+    fiber_knn = None,
+
 )
 
 diffusion_coords = hdm_embed(
