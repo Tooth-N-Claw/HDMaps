@@ -6,8 +6,6 @@ from sklearn.neighbors import NearestNeighbors
 from scipy.sparse import csr_matrix, coo_matrix
 from .utils import HDMConfig, compute_block_indices, get_backend
 
- 
-
 
 def hdm_embed(
     config: HDMConfig = HDMConfig(),
@@ -49,17 +47,17 @@ def hdm_embed(
         block_indices = compute_block_indices(data_samples)       
 
     ## From here on we can use gpu to speed up the computation, if the user wants to
-    b = get_backend(config)
+    backend = get_backend(config)
 
-    joint_kernel = b.compute_joint_kernel(base_kernel, fiber_kernel, block_indices)   
+    joint_kernel = backend.compute_joint_kernel(base_kernel, fiber_kernel, block_indices)   
 
     print("Compute joint kernel: Done.")
     
-    normalized_kernel, inv_sqrt_diag = b.normalize_kernel(joint_kernel)
+    normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
 
     print("Normalize kernel: Done.")
 
-    diffusion_coordinates = b.spectral_embedding(config, normalized_kernel, inv_sqrt_diag)
+    diffusion_coordinates = backend.spectral_embedding(config, normalized_kernel, inv_sqrt_diag)
     print("Spectral embedding: Done.")
 
     return diffusion_coordinates

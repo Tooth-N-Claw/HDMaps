@@ -31,17 +31,19 @@ def compute_clusters(hdm_coords: np.ndarray, num_clusters: int, seed=None) -> np
 
     return labels
 
+
 def visualize_by_eigenvectors(mesh, hdm_coords):
     pass
+
 
 def get_backend(config: HDMConfig):
     """Return the appropriate backend based on the configuration."""
     if config.device == 'cpu':
-        from .cpu import CPU
-        return CPU()
+        from . import cpu
+        return cpu
     elif config.device == 'gpu':
-        from .cupy import CuPy
-        return CuPy()
+        from . import cupy
+        return cupy
     else:
         raise ValueError(f"Unsupported device: {config.device}")
     
