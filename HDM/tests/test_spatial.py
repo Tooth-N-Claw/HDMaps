@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
-from HDM.cpu import CPU 
+from HDM import cpu
 
 
 def test_compute_joint_kernel():
@@ -25,7 +25,7 @@ def test_compute_joint_kernel():
     block_indices = np.array([0, 2])
 
     # Compute joint kernel
-    backend = CPU()  # Use the CPU backend
+    backend = cpu  # Use the CPU backend
     joint_kernel = backend.compute_joint_kernel(base_kernel, fiber_kernel, block_indices)
     joint_kernel_dense = joint_kernel.toarray()
 
