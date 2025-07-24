@@ -5,7 +5,7 @@
 **A Python implementation of Horizontal Diffusion Maps (HDM), a manifold learning framework for analysis of datasets with base-fiber structure.**
 
 ## Installation
-To install the latest development version of `HDM_Python` run:
+To install the latest development version of `HDMaps` run:
 ```bash
 pip install git+https://github.com/frisbro303/HDM_Python
 ```
