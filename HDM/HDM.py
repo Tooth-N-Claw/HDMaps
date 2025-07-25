@@ -15,6 +15,7 @@ def hdm_embed(
     fiber_kernel: Optional[coo_matrix] = None,
     base_distances: Optional[coo_matrix] = None,
     fiber_distances: Optional[coo_matrix] = None,
+    center_and_normalize = False,
 ) -> np.ndarray:
 
     """
@@ -36,6 +37,9 @@ def hdm_embed(
     Returns:
         np.ndarray: Diffusion coordinates from the joint HDM embedding.
     """
+
+    if center_and_normalize == True:
+        data_samples = center_and_scale(data_samples)
     
     base_kernel = compute_base_spatial(config, data_samples, base_distances, base_kernel)
     print("Compute base kernel: Done.")
@@ -61,6 +65,12 @@ def hdm_embed(
     print("Spectral embedding: Done.")
 
     return diffusion_coordinates
+
+
+def center_and_scale(data_samples):
+    centered_samples = [sample - np.mean(sample, axis=0) for sample in data_samples]
+    centered_scaled_samples = [sample / np.linalg.norm(sample, 'fro') for sample in centered_samples]
+    return centered_scaled_samples
 
 
 def compute_base_distances(config: HDMConfig, data_samples: list[np.ndarray]) -> csr_matrix:
@@ -103,13 +113,24 @@ def compute_kernel(distances, eps):
     return kernel
 
 
+
+import numpy as np
+from scipy.sparse import csr_matrix
+
+
+
 def compute_base_spatial(config: HDMConfig, data_samples, base_distances, base_kernel) -> csr_matrix:
     """"""
     if base_distances is None and base_kernel is None:
         base_distances = compute_base_distances(config, data_samples)
     elif base_distances is not None and base_kernel is None:
-        if config.base_sparsity != None:
+        if config.base_knn != None:
+            # base_distances
+            # base_distances = keep_knn(base_distances, config.base_knn)
+            print(base_distances)
+        elif config.base_sparsity != None:
             base_distances.data[base_distances.data >= config.base_sparsity] = 0
+
         # base_distances.data[base_distances.data >= config.base_sparsity] = 0
         base_distances.eliminate_zeros()
 

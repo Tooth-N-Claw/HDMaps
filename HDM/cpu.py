@@ -71,6 +71,23 @@ def spectral_embedding(
 ) -> np.ndarray:
     sqrt_diag = sparse.diags(inv_sqrt_diag, 0)
 
+    import matplotlib.pyplot as plt
+
+    coo = kernel.tocoo()
+    rows, cols = coo.row, coo.col
+    values = coo.data
+
+    # Create scatter plot to mimic heatmap
+    plt.figure(figsize=(10, 8))
+    sc = plt.scatter(cols, rows, c=values, cmap='viridis', s=1, marker='s')
+    plt.colorbar(sc, label='Value')
+    plt.title('Sparse Matrix Heatmap')
+    plt.xlabel('Columns')
+    plt.ylabel('Rows')
+    plt.gca().invert_yaxis()  # Optional: match matrix orientation
+    plt.tight_layout()
+    plt.show()
+
     eigvals, eigvecs = eigendecomposition(config, kernel)   
     
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
