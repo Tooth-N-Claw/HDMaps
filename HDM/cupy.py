@@ -89,5 +89,6 @@ def spectral_embedding(
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
     sqrt_lambda = cp_sparse.diags(cp.sqrt(eigvals[1:]), 0)
     bundle_HDM_full = bundle_HDM @ sqrt_lambda
+    bundle_HDM_full = cp.asnumpy(bundle_HDM_full)  # Convert to NumPy array for consistency
 
     return bundle_HDM_full
