@@ -32,7 +32,7 @@ import scipy.sparse as scipy_sparse
 #     return joint_kernel
 
 
-def compute_joint_kernel_cupy(
+def compute_joint_kernel(
     base_kernel,
     fiber_kernel,
     block_indices: np.ndarray
