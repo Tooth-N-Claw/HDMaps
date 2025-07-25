@@ -1,4 +1,6 @@
 import numpy as np
+
+
 import cupy as cp
 from cupyx.scipy.sparse import coo_matrix, csr_matrix
 from cupyx.scipy import sparse
@@ -32,12 +34,25 @@ def symmetrize(mat):
 
 
 def normalize_kernel(diffusion_matrix: coo_matrix) -> csr_matrix:
+    row_sums = np.array(diffusion_matrix.sum(axis = 1)).flatten()
+    inv_sqrt_diag = 1 / np.sqrt(row_sums)
+
+    new_data = diffusion_matrix.data * inv_sqrt_diag[diffusion_matrix.row] * inv_sqrt_diag[diffusion_matrix.col]
+    
+    normalized_kernel = csr_matrix((new_data, (diffusion_matrix.row, diffusion_matrix.col)), shape=diffusion_matrix.shape)    
+
+def symmetrize(mat):
+    return (mat + mat.T) / 2
+
+
+def normalize_kernel(diffusion_matrix: coo_matrix) -> csr_matrix:
     row_sums = cp.array(diffusion_matrix.sum(axis = 1)).flatten()
     inv_sqrt_diag = 1 / cp.sqrt(row_sums)
 
     new_data = diffusion_matrix.data * inv_sqrt_diag[diffusion_matrix.row] * inv_sqrt_diag[diffusion_matrix.col]
     
     normalized_kernel = csr_matrix((new_data, (diffusion_matrix.row, diffusion_matrix.col)), shape=diffusion_matrix.shape)    
+
 
     normalized_kernel = symmetrize(normalized_kernel)
     
@@ -89,6 +104,7 @@ def spectral_embedding(
     kernel: csr_matrix,
     inv_sqrt_diag: cp.ndarray,
 ):
+
     sqrt_diag = sparse.diags(inv_sqrt_diag, 0)
 
     eigvals, eigvecs = eigendecomposition(config, kernel)
@@ -120,6 +136,7 @@ def eigendecomposition(
     
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
     sqrt_lambda = sparse.diags(cp.sqrt(eigvals[1:]), 0)
+
     bundle_HDM_full = bundle_HDM @ sqrt_lambda
 
     return bundle_HDM_full

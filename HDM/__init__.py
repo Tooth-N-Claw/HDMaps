@@ -14,8 +14,4 @@ __all__ = [
     'compute_fiber_kernel_from_maps',
     'compute_clusters',
     'visualize_by_eigenvector'
-<<<<<<< HEAD
 ]
-=======
-]
->>>>>>> c99af3e (Naive plot by eigenvector implementation)
