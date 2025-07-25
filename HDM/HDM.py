@@ -133,4 +133,3 @@ def compute_fiber_spatial(config: HDMConfig, data_samples, fiber_distances, fibe
         fiber_kernel = compute_kernel(fiber_distances, config.fiber_epsilon)
 
     return fiber_kernel.tocoo()
-
