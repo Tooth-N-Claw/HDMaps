@@ -51,7 +51,7 @@ def compute_joint_kernel(
     fiber_base_row = cp.searchsorted(block_indices_gpu, fiber_row_gpu, side='right') - 1
     fiber_base_col = cp.searchsorted(block_indices_gpu, fiber_col_gpu, side='right') - 1
     
-    block_vals = base_kernel_gpu[fiber_base_row, fiber_base_col].toarray().flatten()
+    block_vals = base_kernel_gpu[fiber_base_row, fiber_base_col].flatten()
     
     joint_data = fiber_data_gpu * block_vals
     
