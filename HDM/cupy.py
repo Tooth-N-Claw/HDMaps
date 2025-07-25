@@ -1,8 +1,7 @@
 import numpy as np
 import cupy as cp
-import cupyx.scipy.sparse as cp_sparse
-import cupyx.scipy.sparse.linalg as cp_linalg
-import scipy.sparse as scipy_sparse
+from cupyx.scipy.sparse import coo_matrix, csr_matrix
+from cupyx.scipy import sparse
 
 
 
@@ -33,8 +32,8 @@ def symmetrize(mat):
 
 
 def normalize_kernel(diffusion_matrix: coo_matrix) -> csr_matrix:
-    row_sums = np.array(diffusion_matrix.sum(axis = 1)).flatten()
-    inv_sqrt_diag = 1 / np.sqrt(row_sums)
+    row_sums = cp.array(diffusion_matrix.sum(axis = 1)).flatten()
+    inv_sqrt_diag = 1 / cp.sqrt(row_sums)
 
     new_data = diffusion_matrix.data * inv_sqrt_diag[diffusion_matrix.row] * inv_sqrt_diag[diffusion_matrix.col]
     
@@ -47,7 +46,7 @@ def normalize_kernel(diffusion_matrix: coo_matrix) -> csr_matrix:
 
 def eigendecomposition(
     config,
-    matrix: sparse.csr_matrix,
+    matrix,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Perform eigendecomposition on a sparse matrix."""
     device = config.device
@@ -88,8 +87,8 @@ def eigendecomposition(
 def spectral_embedding(
     config: HDMConfig,
     kernel: csr_matrix,
-    inv_sqrt_diag: np.ndarray,
-) -> np.ndarray:
+    inv_sqrt_diag: cp.ndarray,
+):
     sqrt_diag = sparse.diags(inv_sqrt_diag, 0)
 
     eigvals, eigvecs = eigendecomposition(config, kernel)
@@ -120,7 +119,7 @@ def eigendecomposition(
     eigvecs = eigvecs[:, ::-1]
     
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
-    sqrt_lambda = sparse.diags(np.sqrt(eigvals[1:]), 0)
+    sqrt_lambda = sparse.diags(cp.sqrt(eigvals[1:]), 0)
     bundle_HDM_full = bundle_HDM @ sqrt_lambda
 
     return bundle_HDM_full
