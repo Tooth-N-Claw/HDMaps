@@ -69,26 +69,25 @@ def compute_base_distances(config: HDMConfig, data_samples: list[np.ndarray]) ->
 
     
     if config.base_knn != None:
-        nn = NearestNeighbors(n_neighbors=config.base_knn, algorithm='ball_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(n_neighbors=config.base_knn, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.kneighbors_graph(data, mode='distance')
     elif config.base_sparsity != None:
-        nn = NearestNeighbors(radius=config.base_sparsity, algorithm='ball_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(radius=config.base_sparsity, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode='distance')
         
     return sparse_dist_matrix
 
-
 def compute_fiber_distances(config: HDMConfig, data_samples: list[np.ndarray]) -> csr_matrix:
     data = np.vstack(data_samples)
     
     if config.fiber_knn != None:
-        nn = NearestNeighbors(n_neighbors=config.fiber_knn, algorithm='ball_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(n_neighbors=config.fiber_knn, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.kneighbors_graph(data, mode='distance')
     elif config.fiber_sparsity != None:
-        nn = NearestNeighbors(radius=config.fiber_sparsity, algorithm='ball_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(radius=config.fiber_sparsity, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode='distance')
 
@@ -105,6 +104,7 @@ def compute_kernel(distances, eps):
 
 def compute_base_spatial(config: HDMConfig, data_samples, base_distances, base_kernel) -> csr_matrix:
     """"""
+
     if base_distances is None and base_kernel is None:
         base_distances = compute_base_distances(config, data_samples)
     elif base_distances is not None and base_kernel is None:
@@ -112,7 +112,6 @@ def compute_base_spatial(config: HDMConfig, data_samples, base_distances, base_k
             base_distances.data[base_distances.data >= config.base_sparsity] = 0
         # base_distances.data[base_distances.data >= config.base_sparsity] = 0
         base_distances.eliminate_zeros()
-
     if base_kernel is None:
         base_kernel = compute_kernel(base_distances, config.base_epsilon)
 
@@ -122,14 +121,11 @@ def compute_base_spatial(config: HDMConfig, data_samples, base_distances, base_k
 
 def compute_fiber_spatial(config: HDMConfig, data_samples, fiber_distances, fiber_kernel)-> coo_matrix:
     """"""
-
     if fiber_distances is None and fiber_kernel is None:
         fiber_distances = compute_fiber_distances(config, data_samples)
     elif fiber_distances is not None and fiber_kernel is None:
         fiber_distances.data[fiber_distances.data >= config.fiber_sparsity] = 0
         fiber_distances.eliminate_zeros()
-
     if fiber_kernel is None:
         fiber_kernel = compute_kernel(fiber_distances, config.fiber_epsilon)
-
     return fiber_kernel.tocoo()

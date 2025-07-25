@@ -1,5 +1,6 @@
 examples/example-data
 examples/platyrrhine
+examples/vertebra
 data
 .DS_Store
 *.off
