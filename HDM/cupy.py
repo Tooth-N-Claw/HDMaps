@@ -6,30 +6,34 @@ import scipy.sparse as scipy_sparse
 
 
 def compute_joint_kernel(
-    base_kernel: scipy_sparse.csr_matrix,
-    fiber_kernel: scipy_sparse.coo_matrix,
+    base_kernel,
+    fiber_kernel,
     block_indices: np.ndarray
 ) -> cp_sparse.coo_matrix:
-    # Keep CPU operations until COO matrix construction
-    fiber_base_row = np.searchsorted(block_indices, fiber_kernel.row, side='right') - 1
-    fiber_base_col = np.searchsorted(block_indices, fiber_kernel.col, side='right') - 1
-
-    block_vals = np.array(base_kernel[fiber_base_row, fiber_base_col]).reshape(-1)
+    """GPU-accelerated version using CuPy"""
     
-    joint_data = fiber_kernel.data * block_vals
-    
-    # Convert to CuPy from here
-    joint_data_gpu = cp.asarray(joint_data)
     fiber_row_gpu = cp.asarray(fiber_kernel.row)
     fiber_col_gpu = cp.asarray(fiber_kernel.col)
+    fiber_data_gpu = cp.asarray(fiber_kernel.data)
+    block_indices_gpu = cp.asarray(block_indices)
     
-    joint_kernel = cp_sparse.coo_matrix(
-        (joint_data_gpu, (fiber_row_gpu, fiber_col_gpu)), 
+    base_kernel_gpu = cp_sparse.csr_matrix(base_kernel)
+    
+    fiber_base_row = cp.searchsorted(block_indices_gpu, fiber_row_gpu, side='right') - 1
+    fiber_base_col = cp.searchsorted(block_indices_gpu, fiber_col_gpu, side='right') - 1
+    
+    block_vals = base_kernel_gpu[fiber_base_row, fiber_base_col].flatten()
+    
+    joint_data = fiber_data_gpu * block_vals
+    
+    joint_kernel_gpu = cp_sparse.coo_matrix(
+        (joint_data, (fiber_row_gpu, fiber_col_gpu)), 
         shape=fiber_kernel.shape
     )
-    joint_kernel.eliminate_zeros()
+    joint_kernel_gpu.eliminate_zeros()
     
-    return joint_kernel
+    return joint_kernel_gpu
+
 
 
 def symmetrize(mat):
@@ -62,7 +66,6 @@ def eigendecomposition(
     k = config.num_eigenvectors
     which = "LM"
 
-    # Use CuPy's sparse eigenvalue solver
     eigvals, eigvecs = cp_linalg.eigsh(
         matrix, 
         k=k, 
@@ -78,7 +81,7 @@ def eigendecomposition(
 
 
 def spectral_embedding(
-    config,  # Removed HDMConfig type hint to be more general
+    config, 
     kernel: cp_sparse.csr_matrix,
     inv_sqrt_diag: cp.ndarray,
 ) -> cp.ndarray:
@@ -89,6 +92,6 @@ def spectral_embedding(
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
     sqrt_lambda = cp_sparse.diags(cp.sqrt(eigvals[1:]), 0)
     bundle_HDM_full = bundle_HDM @ sqrt_lambda
-    bundle_HDM_full = cp.asnumpy(bundle_HDM_full)  # Convert to NumPy array for consistency
+    bundle_HDM_full = cp.asnumpy(bundle_HDM_full)  
 
     return bundle_HDM_full
