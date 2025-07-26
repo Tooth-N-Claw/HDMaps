@@ -21,8 +21,8 @@ def embed_vs_actual(diffusion_coords, data_samples, num_samples=4, embed_scale=0
     for cmap, n in [(tab20, 20), (set1, 9), (set2, 8), (set3, 12), 
                     (pastel1, 9), (pastel2, 8), (dark2, 8), (accent, 8)]:
         all_colors.extend([cmap(i) for i in range(n)])
-    colors_110 = all_colors[:110]
-    combined_cmap = ListedColormap(colors_110)
+    colors_dynamic = all_colors[:sample_length]
+    combined_cmap = ListedColormap(colors_dynamic)
 
     wings = list(range(num_samples))
     embedded_wings = len(wings)
