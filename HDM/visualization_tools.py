@@ -24,7 +24,7 @@ def embed_vs_actual(diffusion_coords, data_samples, num_samples=4, embed_scale=0
     colors_110 = all_colors[:110]
     combined_cmap = ListedColormap(colors_110)
 
-    wings = [0,1,2,3]
+    wings = list(range(num_samples))
     embedded_wings = len(wings)
     enable_labels = False
 
