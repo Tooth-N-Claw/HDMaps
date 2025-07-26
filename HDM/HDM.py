@@ -69,11 +69,11 @@ def compute_base_distances(config: HDMConfig, data_samples: list[np.ndarray]) ->
 
     
     if config.base_knn != None:
-        nn = NearestNeighbors(n_neighbors=config.base_knn, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(n_neighbors=config.base_knn, algorithm='auto', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.kneighbors_graph(data, mode='distance')
     elif config.base_sparsity != None:
-        nn = NearestNeighbors(radius=config.base_sparsity, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(radius=config.base_sparsity, algorithm='auto', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode='distance')
         
@@ -83,11 +83,11 @@ def compute_fiber_distances(config: HDMConfig, data_samples: list[np.ndarray]) -
     data = np.vstack(data_samples)
     
     if config.fiber_knn != None:
-        nn = NearestNeighbors(n_neighbors=config.fiber_knn, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(n_neighbors=config.fiber_knn, algorithm='auto', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.kneighbors_graph(data, mode='distance')
     elif config.fiber_sparsity != None:
-        nn = NearestNeighbors(radius=config.fiber_sparsity, algorithm='kd_tree', metric='euclidean', n_jobs=-1)
+        nn = NearestNeighbors(radius=config.fiber_sparsity, algorithm='auto', metric='euclidean', n_jobs=-1)
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode='distance')
 
