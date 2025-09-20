@@ -33,3 +33,22 @@ diffusion_coords = hdm_embed(
 )
 
 embed_vs_actual(diffusion_coords, data_samples, num_samples=4)
+
+
+# points = pv.PolyData(diffusion_coords)
+# plotter = pv.Plotter()   
+# plotter.add_mesh(points, color="red", point_size=5, render_points_as_spheres=True)
+# plotter.show()
+
+# point_cloud = pv.PolyData(diffusion_coords[:, :3])
+# plotter = pv.Plotter()
+
+# scalars = np.tile(np.arange(sample_length), num_samples)
+# cmap = plt.get_cmap("rainbow", sample_length)
+# norm = Normalize(vmin=0, vmax=sample_length-1)
+
+# plotter.add_mesh(point_cloud, scalars=scalars, point_size=10, 
+#                  render_points_as_spheres=True, cmap="tab20", 
+#                  clim=[0, sample_length-1], show_scalar_bar=False)
+
+# plotter.show()
