@@ -21,9 +21,9 @@ config = HDMConfig(
     base_epsilon = 0.004,
     fiber_epsilon = 0.0006,
     base_sparsity = 0.08,
-    base_knn = None,
+    base_knn = 6,
     fiber_sparsity = 0.08,
-    fiber_knn = None,
+    fiber_knn = 6,
 
 )
 

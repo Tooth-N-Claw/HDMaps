@@ -28,10 +28,10 @@ def symmetrize(mat):
 
 def normalize_kernel(diffusion_matrix: coo_matrix) -> csr_matrix:
     row_sums = np.array(diffusion_matrix.sum(axis = 1)).flatten()
-    # inv_sqrt_diag = np.zeros_like(row_sums)
-    # nonzero_mask = row_sums != 0
-    # inv_sqrt_diag[nonzero_mask] = 1 / np.sqrt(row_sums[nonzero_mask])
-    inv_sqrt_diag = 1 / np.sqrt(row_sums)
+    inv_sqrt_diag = np.zeros_like(row_sums)
+    nonzero_mask = row_sums != 0
+    inv_sqrt_diag[nonzero_mask] = 1 / np.sqrt(row_sums[nonzero_mask])
+    # inv_sqrt_diag = 1 / np.sqrt(row_sums)
     new_data = diffusion_matrix.data * inv_sqrt_diag[diffusion_matrix.row] * inv_sqrt_diag[diffusion_matrix.col]
     
     normalized_kernel = csr_matrix((new_data, (diffusion_matrix.row, diffusion_matrix.col)), shape=diffusion_matrix.shape)    
@@ -72,7 +72,7 @@ def spectral_embedding(
     inv_sqrt_diag: np.ndarray,
 ) -> np.ndarray:
     sqrt_diag = sparse.diags(inv_sqrt_diag, 0)
-
+  
     eigvals, eigvecs = eigendecomposition(config, kernel)   
     
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]

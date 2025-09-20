@@ -171,3 +171,4 @@ cython_debug/
 platyrrhine/Names.mat
 platyrrhine/FinalDists.mat
 platyrrhine/softMapMatrix.mat
+benchmark/plots/*
