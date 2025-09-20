@@ -8,6 +8,7 @@ from .utils import (
 from .visualization_tools import embed_vs_actual
 
 from .utils import compute_fiber_kernel_from_maps
+from .HDM import compute_base_distances,compute_fiber_distances
 
 
 __all__ = [
