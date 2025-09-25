@@ -146,11 +146,7 @@ def compute_base_spatial(
             base_distances.data[base_distances.data >= config.base_sparsity] = 0
         base_distances.eliminate_zeros()
 
-    base_distances_max = base_distances.max()
-    base_distances_min = base_distances.min()
-    base_distances = (base_distances - base_distances_min) / (
-        base_distances_max - base_distances_min
-    )
+
     if base_kernel is None:
         base_kernel = compute_kernel(base_distances, config.base_epsilon)
 

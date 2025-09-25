@@ -5,7 +5,7 @@ from HDM import hdm_embed, HDMConfig
 
 directory_path = "example-data/wing/"
 files = [f for f in os.listdir(directory_path) if f.endswith(".txt")]
-files = files[:50]
+files = files[:100]
 data_samples = [
     np.loadtxt(os.path.join(directory_path, file), delimiter=",") for file in files
 ]
