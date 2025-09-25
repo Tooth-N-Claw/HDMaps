@@ -14,7 +14,7 @@ from matplotlib.colors import Normalize
 import psutil
 import threading
 import gc
-
+from load_wings import get_wing_data
 from load_off import generate
 
 
@@ -73,14 +73,13 @@ def visualize_corresponding_points(points: np.ndarray, num_samples) -> None:
     plotter.show()
 
 
-def single_run(data_samples, fiber_kernel, config):
+def single_run(data_samples, config, fiber_kernel=None):
     return hdm_embed(
         data_samples=data_samples,
-        # base_distances=base_distances,
-        # block_indices=block_indices,
         config=config,
         fiber_kernel=fiber_kernel,
     )
+
 
 
 def generate_data(sample_size, data_point_amount, data_dim, seed, amount):
@@ -117,7 +116,7 @@ def _current_rss_bytes(include_children: bool = True) -> int:
     return rss
 
 
-def run_and_measure(data_samples, fiber_kernel, config, sample_interval: float = 0.02):
+def run_and_measure(data_samples, config, fiber_kernel=None, sample_interval: float = 0.02):
     """
     Run one embed; return (elapsed_seconds, peak_extra_MiB).
     peak_extra_MiB = max(RSS during run) - baseline RSS before run.
@@ -138,7 +137,7 @@ def run_and_measure(data_samples, fiber_kernel, config, sample_interval: float =
     t.start()
     t0 = time.perf_counter()
     try:
-        single_run(data_samples, fiber_kernel, config)
+        single_run(data_samples, config, fiber_kernel=fiber_kernel)
     finally:
         stop.set()
         t.join()
@@ -147,19 +146,28 @@ def run_and_measure(data_samples, fiber_kernel, config, sample_interval: float =
     return elapsed, peak_extra_mib
 
 
-def run_benchmark(save_path: str = None):
+def run_benchmark_teeth(save_path: str = None):
     if save_path:
         os.makedirs(save_path, exist_ok=True)
 
-    # sample_sizes = [2**i for i in range(10, 11)]
-    sample_sizes = [50]
+    sample_sizes = [2**i for i in range(10, 11)]
     data_point_amounts = [2**i for i in range(5, 6)]
 
+    # config = HDMConfig(
+    #     base_sparsity=0.4,
+    #     # base_sparsity=0.08,
+    #     # fiber_sparsity=0.08,
+    #     device="gpu",
+    # )
+    
     config = HDMConfig(
-        base_sparsity=0.4,
-        # base_sparsity=0.08,
-        # fiber_sparsity=0.08,
-        device="gpu",
+        base_epsilon=0.004,
+        fiber_epsilon=0.0006,
+        base_sparsity=0.08,
+        base_knn = None,
+        fiber_sparsity=0.08,
+        fiber_knn = None,
+        device="gpu"
     )
 
     repetitions = 3
@@ -182,7 +190,7 @@ def run_benchmark(save_path: str = None):
             sample_size, fixed_data_point_amount, data_dim, seed, 50000
         )
         # warmup
-        points = single_run(data_samples, fiber_kernel, config)
+        points = single_run(data_samples, config, fiber_kernel=fiber_kernel, )
         points = pv.PolyData(points)
         plotter = pv.Plotter()
         plotter.add_mesh(
@@ -192,23 +200,135 @@ def run_benchmark(save_path: str = None):
 
         times, mems = [], []
         for _ in range(repetitions):
-            t_sec, m_mib = run_and_measure(data_samples, fiber_kernel, config)
+            t_sec, m_mib = run_and_measure(data_samples, config, fiber_kernel=fiber_kernel)
             times.append(t_sec)
             mems.append(m_mib)
         times_vs_ss.append(np.mean(times))
         mem_vs_ss.append(np.mean(mems))
-    exit(0)
-    for data_point_amount in data_point_amounts:
-        print(f"data point amount: {data_point_amount}")
-        data_samples, fiber_kernel = generate_data(
-            fixed_sample_size, data_point_amount, data_dim, seed, 5000
+    # for data_point_amount in data_point_amounts:
+    #     print(f"data point amount: {data_point_amount}")
+    #     data_samples, fiber_kernel = generate_data(
+    #         fixed_sample_size, data_point_amount, data_dim, seed, 5000
+    #     )
+    #     # warmup
+    #     single_run(data_samples, config, fiber_kernel=fiber_kernel, )
+
+    #     times, mems = [], []
+    #     for _ in range(repetitions):
+    #         t_sec, m_mib = run_and_measure(data_samples, config, fiber_kernel=fiber_kernel)
+    #         times.append(t_sec)
+    #         mems.append(m_mib)
+    #     times_vs_dpa.append(np.mean(times))
+    #     mem_vs_dpa.append(np.mean(mems))
+
+    fig, ax1 = plt.subplots()
+    color = "tab:blue"
+    ax1.set_xlabel("sample_size")
+    ax1.set_ylabel("avg time per run [s]", color=color)
+    ax1.plot(sample_sizes, times_vs_ss, marker="o", color=color, label="Runtime")
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    ax2 = ax1.twinx()
+    color = "tab:red"
+    ax2.set_ylabel("avg peak extra memory [MiB]", color=color)
+    ax2.plot(
+        sample_sizes, mem_vs_ss, marker="s", linestyle="--", color=color, label="Memory"
+    )
+    ax2.tick_params(axis="y", labelcolor=color)
+
+    plt.title(
+        f"Runtime & Memory vs sample_size (data_point_amount={fixed_data_point_amount}) GPU"
+    )
+    fig.tight_layout()
+    plt.savefig(os.path.join(save_path, "runtime_mem_vs_sample_size.png"))
+    plt.close()
+
+    # fig, ax1 = plt.subplots()
+    # color = "tab:blue"
+    # ax1.set_xlabel("data_point_amount")
+    # ax1.set_ylabel("avg time per run [s]", color=color)
+    # ax1.plot(data_point_amounts, times_vs_dpa, marker="o", color=color, label="Runtime")
+    # ax1.tick_params(axis="y", labelcolor=color)
+
+    # ax2 = ax1.twinx()
+    # color = "tab:red"
+    # ax2.set_ylabel("avg peak extra memory [MiB]", color=color)
+    # ax2.plot(
+    #     data_point_amounts,
+    #     mem_vs_dpa,
+    #     marker="s",
+    #     linestyle="--",
+    #     color=color,
+    #     label="Memory",
+    # )
+    # ax2.tick_params(axis="y", labelcolor=color)
+
+    # plt.title(
+    #     f"Runtime & Memory vs data_point_amount (sample_size={fixed_sample_size})"
+    # )
+    # fig.tight_layout()
+    # plt.savefig(os.path.join(save_path, "runtime_mem_vs_data_point_amount.png"))
+    # plt.close()
+
+
+def run_benchmark_wings(save_path: str = None):
+    if save_path:
+        os.makedirs(save_path, exist_ok=True)
+
+    sample_sizes = [20,40,60,80,100,120]
+    data_point_amounts = [10,30,50,70,90,110]
+
+
+    
+    config = HDMConfig(
+        base_epsilon=0.004,
+        fiber_epsilon=0.0006,
+        base_sparsity=0.08,
+        base_knn = None,
+        fiber_sparsity=0.08,
+        fiber_knn = None,
+        device="gpu"
+    )
+
+    repetitions = 3
+
+
+    fixed_data_point_amount = 110
+    fixed_sample_size = 100
+
+    times_vs_ss = []
+    times_vs_dpa = []
+
+    mem_vs_ss = []
+    mem_vs_dpa = []
+
+    for sample_size in sample_sizes:
+        print(f"sampel size: {sample_size}")
+        data_samples = get_wing_data(
+            sample_size, fixed_data_point_amount
         )
         # warmup
-        single_run(data_samples, fiber_kernel, config)
+        single_run(data_samples=data_samples, config=config)
+        
+        times, mems = [], []
+        for _ in range(repetitions):
+            t_sec, m_mib = run_and_measure(data_samples, config)
+            times.append(t_sec)
+            mems.append(m_mib)
+        times_vs_ss.append(np.mean(times))
+        mem_vs_ss.append(np.mean(mems))
+        
+    for data_point_amount in data_point_amounts:
+        print(f"data point amount: {data_point_amount}")
+        data_samples = get_wing_data(
+            fixed_sample_size, data_point_amount
+        )
+        # warmup
+        single_run(data_samples=data_samples, config=config)
 
         times, mems = [], []
         for _ in range(repetitions):
-            t_sec, m_mib = run_and_measure(data_samples, fiber_kernel, config)
+            t_sec, m_mib = run_and_measure(data_samples, config)
             times.append(t_sec)
             mems.append(m_mib)
         times_vs_dpa.append(np.mean(times))
@@ -230,10 +350,10 @@ def run_benchmark(save_path: str = None):
     ax2.tick_params(axis="y", labelcolor=color)
 
     plt.title(
-        f"Runtime & Memory vs sample_size (data_point_amount={fixed_data_point_amount})"
+        f"Runtime & Memory vs sample_size (data_point_amount={fixed_data_point_amount}) GPU"
     )
     fig.tight_layout()
-    plt.savefig(os.path.join(save_path, "runtime_mem_vs_sample_size.png"))
+    plt.savefig(os.path.join(save_path, "GPU_runtime_mem_vs_sample_size.png"))
     plt.close()
 
     fig, ax1 = plt.subplots()
@@ -257,12 +377,116 @@ def run_benchmark(save_path: str = None):
     ax2.tick_params(axis="y", labelcolor=color)
 
     plt.title(
-        f"Runtime & Memory vs data_point_amount (sample_size={fixed_sample_size})"
+        f"Runtime & Memory vs data_point_amount (sample_size={fixed_sample_size}) GPU"
     )
     fig.tight_layout()
-    plt.savefig(os.path.join(save_path, "runtime_mem_vs_data_point_amount.png"))
+    plt.savefig(os.path.join(save_path, "GPU_runtime_mem_vs_data_point_amount.png"))
+    plt.close()
+    
+
+    
+    config = HDMConfig(
+        base_epsilon=0.004,
+        fiber_epsilon=0.0006,
+        base_sparsity=0.08,
+        base_knn = None,
+        fiber_sparsity=0.08,
+        fiber_knn = None,
+        device="cpu"
+    )
+
+    repetitions = 3
+
+
+    fixed_data_point_amount = 110
+    fixed_sample_size = 50
+
+    times_vs_ss = []
+    times_vs_dpa = []
+
+    mem_vs_ss = []
+    mem_vs_dpa = []
+
+    for sample_size in sample_sizes:
+        print(f"sampel size: {sample_size}")
+        data_samples = get_wing_data(
+            sample_size, fixed_data_point_amount
+        )
+        # warmup
+        single_run(data_samples=data_samples, config=config)
+        
+        times, mems = [], []
+        for _ in range(repetitions):
+            t_sec, m_mib = run_and_measure(data_samples, config)
+            times.append(t_sec)
+            mems.append(m_mib)
+        times_vs_ss.append(np.mean(times))
+        mem_vs_ss.append(np.mean(mems))
+        
+    for data_point_amount in data_point_amounts:
+        print(f"data point amount: {data_point_amount}")
+        data_samples = get_wing_data(
+            fixed_sample_size, data_point_amount
+        )
+        # warmup
+        single_run(data_samples=data_samples, config=config)
+
+        times, mems = [], []
+        for _ in range(repetitions):
+            t_sec, m_mib = run_and_measure(data_samples, config)
+            times.append(t_sec)
+            mems.append(m_mib)
+        times_vs_dpa.append(np.mean(times))
+        mem_vs_dpa.append(np.mean(mems))
+
+    fig, ax1 = plt.subplots()
+    color = "tab:blue"
+    ax1.set_xlabel("sample_size")
+    ax1.set_ylabel("avg time per run [s]", color=color)
+    ax1.plot(sample_sizes, times_vs_ss, marker="o", color=color, label="Runtime")
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    ax2 = ax1.twinx()
+    color = "tab:red"
+    ax2.set_ylabel("avg peak extra memory [MiB]", color=color)
+    ax2.plot(
+        sample_sizes, mem_vs_ss, marker="s", linestyle="--", color=color, label="Memory"
+    )
+    ax2.tick_params(axis="y", labelcolor=color)
+
+    plt.title(
+        f"Runtime & Memory vs sample_size (data_point_amount={fixed_data_point_amount}) CPU"
+    )
+    fig.tight_layout()
+    plt.savefig(os.path.join(save_path, "CPU_runtime_mem_vs_sample_size.png"))
     plt.close()
 
+    fig, ax1 = plt.subplots()
+    color = "tab:blue"
+    ax1.set_xlabel("data_point_amount")
+    ax1.set_ylabel("avg time per run [s]", color=color)
+    ax1.plot(data_point_amounts, times_vs_dpa, marker="o", color=color, label="Runtime")
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    ax2 = ax1.twinx()
+    color = "tab:red"
+    ax2.set_ylabel("avg peak extra memory [MiB]", color=color)
+    ax2.plot(
+        data_point_amounts,
+        mem_vs_dpa,
+        marker="s",
+        linestyle="--",
+        color=color,
+        label="Memory",
+    )
+    ax2.tick_params(axis="y", labelcolor=color)
+
+    plt.title(
+        f"Runtime & Memory vs data_point_amount (sample_size={fixed_sample_size}) CPU"
+    )
+    fig.tight_layout()
+    plt.savefig(os.path.join(save_path, "CPU_runtime_mem_vs_data_point_amount.png"))
+    plt.close()
 
 if __name__ == "__main__":
-    run_benchmark(save_path="benchmark/plots")
+    run_benchmark_wings(save_path="benchmark/plots/wings")
