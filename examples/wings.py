@@ -5,7 +5,7 @@ from HDM import hdm_embed, HDMConfig
 
 directory_path = "example-data/wing/"
 files = [f for f in os.listdir(directory_path) if f.endswith(".txt")]
-files = files[:100]
+files = files[:50]
 data_samples = [
     np.loadtxt(os.path.join(directory_path, file), delimiter=",") for file in files
 ]
@@ -21,7 +21,7 @@ config = HDMConfig(
     base_knn = None,
     fiber_sparsity=0.08,
     fiber_knn = None,
-    device="gpu"
+    device="cpu"
 )
 
 diffusion_coords = hdm_embed(data_samples=data_samples, config=config)
