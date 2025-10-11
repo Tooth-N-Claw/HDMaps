@@ -49,7 +49,7 @@ base_distances = load_npz(
 block_indices = np.load("example-data/teeth/block_indices.npy")
 
 
-config = HDMConfig(base_sparsity=0.4, base_knn=4, device="gpu")
+config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
 # data_samples = [np.random.uniform(-1, 1, size=(4463, 3)) for _ in range(50)]
 
 # base_distances.data[base_distances.data >= config.base_sparsity] = 0
