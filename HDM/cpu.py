@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
 from scipy.sparse.linalg import LinearOperator
-
+from numba import jit, prange
 # def compute_joint_kernel(
 #     base_kernel: csr_matrix, fiber_kernel: coo_matrix, block_indices: np.ndarray
 # ) -> coo_matrix:
@@ -95,6 +95,10 @@ def compute_joint_kernel_linear_operator(
         
     #     return result.ravel()
     
+    for i in range(n):
+        for j in range(i+1):
+            maps[i,j] *= base_kernel[i,j]
+    
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
         result = np.zeros((n, m))
@@ -103,21 +107,17 @@ def compute_joint_kernel_linear_operator(
         pairs = [(i, j) for i in range(n) for j in range(i+1)]
         
         # Process in batches
-        batch_size = 1
+        batch_size = 10000
         for batch_start in range(0, len(pairs), batch_size):
             batch_pairs = pairs[batch_start:batch_start + batch_size]
             
-            # Compute all contributions in batch
             for i, j in batch_pairs:
                 temp = sample_dists[i] @ v_blocks[j]
-                temp = maps[i, j] @ temp
-                contribution = base_kernel[i, j] * temp
-                result[i] += contribution
+                result[i] += maps[i, j] @ temp
                 
                 if i != j:
                     temp_transpose = maps[i, j].T @ v_blocks[i]
-                    temp_transpose = sample_dists[i].T @ temp_transpose
-                    result[j] += base_kernel[i, j] * temp_transpose
+                    result[j] += sample_dists[i].T @ temp_transpose
         
         return result.ravel()
 

@@ -69,7 +69,6 @@ def hdm_embed(
     normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
         base_kernel, fiber_kernels, block_indices, maps
     )
-
     print("Construct Linear Operator: Done.")
     
     diffusion_coordinates = backend.spectral_embedding(
