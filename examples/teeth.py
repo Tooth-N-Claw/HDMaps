@@ -1,7 +1,7 @@
 import numpy as np
 import pyvista as pv
 
-from scipy.sparse import load_npz
+from scipy.sparse import load_npz, block_array
 from scipy.io import loadmat
 
 from HDM import (
@@ -57,12 +57,14 @@ config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
 # fiber_kernel.eliminate_zeros()
 
 
+
 print("start")
 points = hdm_embed(
     config=config,
     block_indices = block_indices,
-    fiber_kernel=fiber_kernel,
-    base_distances = base_distances
+    maps=maps,
+    base_distances = base_distances,
+    data_samples = data_samples
 )
 
 

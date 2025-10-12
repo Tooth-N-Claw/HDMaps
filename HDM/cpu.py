@@ -1,4 +1,4 @@
-from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array
+from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array, issparse
 import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
@@ -108,22 +108,27 @@ def compute_joint_kernel(
     m = sample_dists[0].shape[0]
     total_size = n * m
 
-
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
         result = np.zeros((n, m))
         
-        for i in range(n):
-            # Vectorize inner loop
-            temp_all = sample_dists[i] @ v_blocks.T  # (m, n)
+        # for i in range(n):
+        #     # Vectorize inner loop
+        #     temp_all = sample_dists[i] @ v_blocks.T  # (m, n)
             
-            # Apply all maps[i, j] at once: (n, m, m) @ (m, n) -> (n, m)
-            mapped = np.einsum('jkl,lj->jk', maps[i], temp_all)
-            # Or: mapped = (maps_4d[i] @ temp_all.T).T
+        #     # Apply all maps[i, j] at once: (n, m, m) @ (m, n) -> (n, m)
+        #     mapped = np.einsum('jkl,lj->jk', maps_4d[i], temp_all)
+        #     # Or: mapped = (maps_4d[i] @ temp_all.T).T
             
-            # Weighted sum
-            result[i] = base_kernel[i, :] @ mapped
+        #     # Weighted sum
+        #     result[i] = base_kernel[i, :] @ mapped
         
+        for i in range(n):
+            for j in range(n):
+                temp = sample_dists[i] @ v_blocks[j]
+                temp = maps[i, j] @ temp
+                result[i] += base_kernel[i, j] * temp
+    
         return result.ravel()
     # sample_dists_dense = np.array([sample_dists[i].toarray() for i in range(n)])  # (n, m, m)
     # print(f"base_kernel.shape {base_kernel.shape}")

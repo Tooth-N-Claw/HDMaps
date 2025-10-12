@@ -209,10 +209,10 @@ def compute_base_spatial(
 
 
 def compute_fiber_spatial(
-    config: HDMConfig, data_samples, fiber_distances, fiber_kernel
+    config: HDMConfig, data_samples, fiber_distances, fiber_kernels
 ) -> coo_matrix:
     """"""
-    if fiber_kernel is None:
+    if fiber_kernels is None:
         if fiber_distances is None:
             fiber_distances = compute_fiber_distances(config, data_samples)
         else:
