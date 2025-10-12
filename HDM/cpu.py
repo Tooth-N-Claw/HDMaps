@@ -19,130 +19,109 @@ from scipy.sparse.linalg import LinearOperator
 #     joint_kernel.eliminate_zeros()
 #     return joint_kernel
 
-
 def compute_joint_kernel(
     base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
 ) -> coo_matrix:
 
-    # fiber_base_row = np.searchsorted(block_indices, fiber_kernel.row, side="right") - 1
-    # fiber_base_col = np.searchsorted(block_indices, fiber_kernel.col, side="right") - 1
-    # block_vals = np.array(base_kernel[fiber_base_row, fiber_base_col]).reshape(-1)
-
-    # joint_data = fiber_kernel.data * block_vals
-    # joint_kernel = coo_matrix(
-    #     (joint_data, (fiber_kernel.row, fiber_kernel.col)), shape=fiber_kernel.shape
-    # )
-
-    # joint_kernel.eliminate_zeros()
-    # # return joint_kernel
-    # n = base_kernel.shape[0]
-    # m = sample_dists[0].shape[0]
+    n = base_kernel.shape[0]
+    m = sample_dists[0].shape[0]
     
-    # fiber_kernel = np.empty((block_indices[-1], block_indices[-1]))
-
-    # # Create ALL (i,j) pairs (full n×n grid)
-    # i_indices = np.repeat(np.arange(n), n)  # [0,0,0,..., 1,1,1,..., n-1,n-1,n-1]
-    # j_indices = np.tile(np.arange(n), n)    # [0,1,2,...,n-1, 0,1,2,...,n-1, ...]
-
-    # # Stack and compute (fully vectorized)
-    # all_maps = np.stack([maps[i,j] for i,j in zip(i_indices, j_indices)])
-    # all_probs = np.array([base_kernel[i,j] for i,j in zip(i_indices, j_indices)])
-    # all_dists = np.stack([sample_dists[i].toarray() for i in i_indices])
+    # Create n×n grid to store blocks
+    blocks = [[None for _ in range(n)] for _ in range(n)]
     
-    # results = all_probs[:, None, None] * (all_maps @ all_dists)
-
-    # for idx, (i, j) in enumerate(zip(i_indices, j_indices)):
-    #     fiber_kernel[block_indices[i]:block_indices[i+1], block_indices[j]:block_indices[j+1]] = results[idx]
-    #     if i != j:  # Symmetry
-    #         fiber_kernel[block_indices[j]:block_indices[j+1], block_indices[i]:block_indices[i+1]] = results[idx].T
-            
-    # return csr_matrix(fiber_kernel)
-    
-
-    # n = base_kernel.shape[0]
-    # m = sample_dists[0].shape[0]
-    
-    # # Create n×n grid to store blocks
-    # blocks = [[None for _ in range(n)] for _ in range(n)]
-    
-    # # Compute each block
-    # for i in range(n):
-    #     for j in range(n):
-    #         prob = base_kernel[i, j]
-    #         map_ij = maps[i, j]
+    # Compute each block
+    for i in range(n):
+        for j in range(i+1):
+            prob = base_kernel[i, j]
+            map_ij = maps[i, j]
  
-    #         block = prob * (map_ij @ sample_dists[i])
+            block = prob * (map_ij @ sample_dists[i])
             
-    #         # Store as CSR (or keep dense if preferred)
-    #         blocks[i][j] = csr_matrix(block)
+            # Store as CSR (or keep dense if preferred)
+            blocks[i][j] = csr_matrix(block)
+            if i != j:
+                blocks[j][i] = csr_matrix(block.T)
 
 
-    # # Combine all blocks into one big matrix
-    # fiber_kernel = block_array(blocks, format='csr')
+    # Combine all blocks into one big matrix
+    fiber_kernel = block_array(blocks, format='csr')
     
-    # return fiber_kernel
+    return fiber_kernel
 
-    # n = base_kernel.shape[0]
-    
-    # blocks = [[None for _ in range(n)] for _ in range(n)]
-    
-    # batch_size = 100 
-    # all_pairs = [(i, j) for i in range(n) for j in range(n)]
-    
-    # for batch_start in range(0, len(all_pairs), batch_size):
-    #     batch_pairs = all_pairs[batch_start:batch_start + batch_size]
-        
-    #     batch_maps = np.stack([maps[i, j] for i, j in batch_pairs])
-    #     batch_probs = np.array([base_kernel[i, j] for i, j in batch_pairs])
-    #     batch_dists = np.stack([sample_dists[i].toarray() for i, j in batch_pairs])
-        
-    #     batch_results = batch_probs[:, None, None] * (batch_maps @ batch_dists)
-        
-    #     for idx, (i, j) in enumerate(batch_pairs):
-    #         blocks[i][j] = csr_matrix(batch_results[idx])
-    
-    # return block_array(blocks, format='csr')
-    
-    
+
+def compute_joint_kernel_linear_operator(
+    base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
+) -> coo_matrix:
+
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
     total_size = n * m
+    
 
+    # def diffusion_matvec(v):
+    #     v_blocks = v.reshape(n, m)
+    #     result = np.zeros((n, m))
+    #     for i in range(n):
+    #         for j in range(i+1):
+    #             temp = sample_dists[i] @ v_blocks[j]
+    #             temp = maps[i, j] @ temp
+    #             result[i] += base_kernel[i, j] * temp
+    
+    #     return result.ravel()
+
+
+    # def diffusion_matvec(v):
+    #     v_blocks = v.reshape(n, m)
+    #     result = np.zeros((n, m))
+        
+    #     # Compute lower triangle (j <= i)
+    #     for i in range(n):
+    #         for j in range(i+1):
+    #             temp = sample_dists[i] @ v_blocks[j]
+    #             temp = maps[i, j] @ temp
+    #             contribution = base_kernel[i, j] * temp
+                
+    #             # Add to result[i]
+    #             result[i] += contribution
+                
+    #             # Add transpose contribution to result[j] (for upper triangle)
+    #             if i != j:
+    #                 # blocks[j][i] = blocks[i][j].T, so blocks[j][i] @ v[i]
+    #                 # We need to compute: (maps[i,j] @ sample_dists[i]).T @ v[i]
+    #                 # = sample_dists[i].T @ maps[i,j].T @ v[i]
+    #                 temp_transpose = maps[i, j].T @ v_blocks[i]
+    #                 temp_transpose = sample_dists[i].T @ temp_transpose
+    #                 result[j] += base_kernel[i, j] * temp_transpose
+        
+    #     return result.ravel()
+    
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
         result = np.zeros((n, m))
         
-        # for i in range(n):
-        #     # Vectorize inner loop
-        #     temp_all = sample_dists[i] @ v_blocks.T  # (m, n)
-            
-        #     # Apply all maps[i, j] at once: (n, m, m) @ (m, n) -> (n, m)
-        #     mapped = np.einsum('jkl,lj->jk', maps_4d[i], temp_all)
-        #     # Or: mapped = (maps_4d[i] @ temp_all.T).T
-            
-        #     # Weighted sum
-        #     result[i] = base_kernel[i, :] @ mapped
+        # Collect all (i,j) pairs
+        pairs = [(i, j) for i in range(n) for j in range(i+1)]
         
-        for i in range(n):
-            for j in range(n):
+        # Process in batches
+        batch_size = 1
+        for batch_start in range(0, len(pairs), batch_size):
+            batch_pairs = pairs[batch_start:batch_start + batch_size]
+            
+            # Compute all contributions in batch
+            for i, j in batch_pairs:
                 temp = sample_dists[i] @ v_blocks[j]
                 temp = maps[i, j] @ temp
-                result[i] += base_kernel[i, j] * temp
-    
+                contribution = base_kernel[i, j] * temp
+                result[i] += contribution
+                
+                if i != j:
+                    temp_transpose = maps[i, j].T @ v_blocks[i]
+                    temp_transpose = sample_dists[i].T @ temp_transpose
+                    result[j] += base_kernel[i, j] * temp_transpose
+        
         return result.ravel()
-    # sample_dists_dense = np.array([sample_dists[i].toarray() for i in range(n)])  # (n, m, m)
-    # print(f"base_kernel.shape {base_kernel.shape}")
-    # def diffusion_matvec(v):
-    #     v_blocks = v.reshape(n, m)
-        
-    #     # Fully vectorized - no loops!
-    #     temp_all = np.einsum('ikl,lj->ikj', sample_dists_dense, v_blocks.T)  # (n, m, n)
-    #     mapped = np.einsum('ijkl,ilj->ijk', maps, temp_all)  # (n, n, m)
-    #     result = np.einsum('ij,ijk->ik', base_kernel.toarray(), mapped)  # (n, m)
-        
-    #     return result.ravel()
 
-    # Compute row sums ONCE upfront
+
     print("Computing normalization...")
     row_sums = diffusion_matvec(np.ones(total_size))
     inv_sqrt_diag = 1 / np.sqrt(row_sums)

@@ -52,28 +52,30 @@ def hdm_embed(
 
     ## From here on we can use gpu to speed up the computation, if the user wants to
     backend = get_backend(config)
-
+    
+    
     # joint_kernel = backend.compute_joint_kernel(
     #     base_kernel, fiber_kernels, block_indices, maps
     # )
-    normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel(
-        base_kernel, fiber_kernels, block_indices, maps
-    )
-    
 
-    print("Compute joint kernel: Done.")
+    # print("Compute joint kernel: Done.")
 
     # normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
 
-    print("Normalize kernel: Done.")
+    # print("Normalize kernel: Done.")
 
-    # diffusion_coordinates = backend.spectral_embedding(
-    #     config, normalized_kernel, inv_sqrt_diag
-    # )
+
+
+    normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
+        base_kernel, fiber_kernels, block_indices, maps
+    )
+
+    print("Construct Linear Operator: Done.")
     
     diffusion_coordinates = backend.spectral_embedding(
         config, normalized_kernel, inv_sqrt_diag
     )
+    
     print("Spectral embedding: Done.")
 
     return diffusion_coordinates

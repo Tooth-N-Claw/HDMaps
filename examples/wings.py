@@ -2,11 +2,11 @@ import os
 import numpy as np
 import pyvista as pv
 from HDM import hdm_embed, HDMConfig
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, block_array
 from scipy.sparse import eye as speye
 directory_path = "example-data/wing"
 files = [f for f in os.listdir(directory_path) if f.endswith(".txt")]
-files = files[:300]
+files = files[:200]
 data_samples = [
     np.loadtxt(os.path.join(directory_path, file), delimiter=",") for file in files
 ]
@@ -16,9 +16,8 @@ maps = np.empty((n, n), dtype=object)
 for i in range(n):
     for j in range(n):
         maps[i, j] = csr_matrix(np.eye(data_samples[0].shape[0]))
+        
 
-print(maps.shape)
-print(maps[1,0].shape)
 config = HDMConfig(
     base_epsilon=0.004,
     fiber_epsilon=0.0006,

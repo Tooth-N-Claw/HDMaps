@@ -55,7 +55,7 @@ config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
 # base_distances.data[base_distances.data >= config.base_sparsity] = 0
 # base_distances.eliminate_zeros()
 # fiber_kernel.eliminate_zeros()
-
+# maps = block_array(maps, format="csr")
 
 
 print("start")
