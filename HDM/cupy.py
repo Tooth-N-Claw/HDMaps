@@ -37,34 +37,61 @@ def compute_joint_kernel_linear_operator(
     base_kernel, sample_dists: list, block_indices, maps
 ):
 
+    # Convert sample_dists to GPU sparse matrices
     sample_dists_gpu = []
     for sd in sample_dists:
-        if isinstance(sd, np.ndarray):
-            sample_dists_gpu.append(cp.asarray(sd))
-        else:
-            sample_dists_gpu.append(sd)
+        sample_dists_gpu.append(cp_sparse.csr_matrix(sd))
 
     n = base_kernel.shape[0]
     m = sample_dists_gpu[0].shape[0]
     total_size = n * m
 
+    # Pre-convert maps to GPU and apply base_kernel weights
+    maps_gpu = {}
     for i in range(n):
         for j in range(i+1):
-            maps[i, j] *= base_kernel[i, j]
+            maps_gpu[(i, j)] = cp_sparse.csr_matrix(maps[i, j] * base_kernel[i, j])
+
+    # Precompute pairs list once (instead of every matvec call)
+    pairs = [(i, j) for i in range(n) for j in range(i+1)]
+
+    # Precompute transposed matrices for better performance
+    sample_dists_T = [sd.T for sd in sample_dists_gpu]
+    maps_T = {(i, j): maps_gpu[(i, j)].T for i, j in pairs}
+
+    # Create streams for parallel GPU execution - one per result index
+    num_streams = min(n, 32)
+    streams = [cp.cuda.Stream() for _ in range(num_streams)]
+
+    # Precompute which pairs contribute to each result index
+    contributions = [[] for _ in range(n)]
+    for i, j in pairs:
+        contributions[i].append(('direct', i, j))
+        if i != j:
+            contributions[j].append(('transpose', i, j))
 
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
         result = cp.zeros((n, m))
 
-        pairs = [(i, j) for i in range(n) for j in range(i+1)]
+        # Each stream computes all contributions for specific result indices
+        for i in range(n):
+            stream = streams[i % num_streams]
 
-        for i, j in pairs:
-            temp = sample_dists_gpu[i] @ v_blocks[j]
-            result[i] += maps[i, j] @ temp
+            with stream:
+                # Accumulate all contributions to result[i]
+                for contrib_type, ii, jj in contributions[i]:
+                    if contrib_type == 'direct':
+                        # result[i] += maps_gpu[(i,j)] @ sample_dists_gpu[i] @ v_blocks[j]
+                        result[i] += maps_gpu[(ii, jj)] @ (sample_dists_gpu[ii] @ v_blocks[jj])
+                    else:  # transpose
+                        # result[j] += sample_dists_T[i] @ maps_T[(i,j)] @ v_blocks[i]
+                        result[i] += sample_dists_T[ii] @ (maps_T[(ii, jj)] @ v_blocks[ii])
 
-            if i != j:
-                temp_transpose = maps[i, j].T @ v_blocks[i]
-                result[j] += sample_dists_gpu[i].T @ temp_transpose
+        # Synchronize all streams
+        for stream in streams:
+            stream.synchronize()
+
         return result.ravel()
 
     print("Computing normalization...")

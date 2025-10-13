@@ -85,7 +85,6 @@ def compute_base_distances(
 ) -> csr_matrix:
     print("Assumes all data samples has same shape")
     data = np.array([sample.flatten() for sample in data_samples])
-    # print(data.shape)
     n = len(data_samples)
     dist = np.zeros((n, n))
 
@@ -106,7 +105,6 @@ def compute_base_distances(
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
         
-    print(f"sparse_dist_matrix.nnz: {sparse_dist_matrix.nnz}")
     return sparse_dist_matrix
 
 
@@ -139,7 +137,6 @@ def compute_base_distances(
 def compute_fiber_distances(
     config: HDMConfig, data_samples: list[np.ndarray]
 ) -> csr_matrix:
-    # data = np.vstack(data_samples)
     fiber_distances = []
     if config.fiber_knn != None:
         for data in data_samples:
@@ -151,7 +148,6 @@ def compute_fiber_distances(
             )
             nn.fit(data)
             sparse_dist_matrix = nn.kneighbors_graph(data, mode="distance")
-            print(sparse_dist_matrix.nnz)
             fiber_distances.append(sparse_dist_matrix)
     elif config.fiber_sparsity != None:
         for data in data_samples:
@@ -164,12 +160,8 @@ def compute_fiber_distances(
             )
             nn.fit(data)
             sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
-            # print(sparse_dist_matrix.shape)
-            print(sparse_dist_matrix.nnz)
-            # print(sparse_dist_matrix)
-            
             fiber_distances.append(sparse_dist_matrix)
-    # print("done")
+
     return fiber_distances
 
 

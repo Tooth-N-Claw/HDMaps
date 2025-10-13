@@ -62,7 +62,7 @@ config = HDMConfig(
     fiber_knn=4,
     # base_sparsity=0.1,
     # fiber_sparsity=0.1,
-    device="cpu")
+    device="gpu")
 # data_samples = [np.random.uniform(-1, 1, size=(4463, 3)) for _ in range(50)]
 
 # base_distances.data[base_distances.data >= config.base_sparsity] = 0
