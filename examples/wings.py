@@ -22,12 +22,11 @@ for i in range(n):
 if __name__ == '__main__':
     config = HDMConfig(
         base_epsilon=0.004,
-        fiber_epsilon=0.0006,
+        fiber_epsilon=0.001,
         base_sparsity=1,
         base_knn = None,
         fiber_sparsity=1,
-        # fiber_knn=3,
-        fiber_knn = None,
+        fiber_knn=None,
         device="cpu"
     )
 

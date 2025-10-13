@@ -50,9 +50,18 @@ block_indices = np.load("example-data/teeth/block_indices.npy")
 
 
 # config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
+# config = HDMConfig(
+#     base_epsilon = 0.04,
+#     fiber_epsilon = 0.08,
+#     device="cpu")
+
 config = HDMConfig(
-    base_sparsity=1, 
-    base_knn=4, 
+    base_epsilon = 0.04,
+    fiber_epsilon = 0.08,
+    base_knn=4,
+    fiber_knn=4,
+    # base_sparsity=0.1,
+    # fiber_sparsity=0.1,
     device="cpu")
 # data_samples = [np.random.uniform(-1, 1, size=(4463, 3)) for _ in range(50)]
 

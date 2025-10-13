@@ -1,10 +1,9 @@
-from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array, issparse
+from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array
 import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
 from scipy.sparse.linalg import LinearOperator
-from numba import jit, prange
-import multiprocessing
+
 # def compute_joint_kernel(
 #     base_kernel: csr_matrix, fiber_kernel: coo_matrix, block_indices: np.ndarray
 # ) -> coo_matrix:
@@ -23,14 +22,9 @@ import multiprocessing
 def compute_joint_kernel(
     base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
 ) -> coo_matrix:
-
     n = base_kernel.shape[0]
-    m = sample_dists[0].shape[0]
-    
-    # Create n×n grid to store blocks
     blocks = [[None for _ in range(n)] for _ in range(n)]
     
-    # Compute each block
     for i in range(n):
         for j in range(i+1):
             prob = base_kernel[i, j]
@@ -38,13 +32,10 @@ def compute_joint_kernel(
  
             block = prob * (map_ij @ sample_dists[i])
             
-            # Store as CSR (or keep dense if preferred)
             blocks[i][j] = csr_matrix(block)
             if i != j:
                 blocks[j][i] = csr_matrix(block.T)
 
-
-    # Combine all blocks into one big matrix
     fiber_kernel = block_array(blocks, format='csr')
     
     return fiber_kernel
@@ -59,18 +50,9 @@ def compute_joint_kernel_linear_operator(
     total_size = n * m
  
     for i in range(n):
-        for j in range(i+1):
-            # print(0)
-            # print(maps[i,j])            
+        for j in range(i+1): 
             maps[i,j] *= base_kernel[i,j]
-            # print(1)
-            # print(maps[i,j])
-            # print(1.1)
-            # print(sample_dists[i].shape)
-            # print(sample_dists[i].nnz)
-            maps[i,j] = sample_dists[i] @ maps[i,j]
-            # print(2)
-            # print(maps[i,j])
+
 
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
@@ -79,14 +61,12 @@ def compute_joint_kernel_linear_operator(
         pairs = [(i, j) for i in range(n) for j in range(i+1)]
 
         for i, j in pairs:
-            result[i] += maps[i,j] @ v_blocks[j]
-            # temp = sample_dists[i] @ v_blocks[j]
-            # result[i] += maps[i, j] @ temp
+            temp = sample_dists[i] @ v_blocks[j]
+            result[i] += maps[i, j] @ temp
 
             if i != j:
-                result[j] += maps[i,j].T @ v_blocks[i]
-                # temp_transpose = maps[i, j].T @ v_blocks[i]
-                # result[j] += sample_dists[i].T @ temp_transpose
+                temp_transpose = maps[i, j].T @ v_blocks[i]
+                result[j] += sample_dists[i].T @ temp_transpose
         return result.ravel()
 
     print("Computing normalization...")
@@ -94,7 +74,6 @@ def compute_joint_kernel_linear_operator(
     inv_sqrt_diag = 1 / np.sqrt(row_sums)
 
     def normalized_matvec(v):
-        """Use precomputed inv_sqrt_diag"""
         return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
 
     normalized_kernel = LinearOperator(
@@ -109,42 +88,19 @@ def symmetrize(mat):
     return (mat + mat.T) / 2
 
 
-# def normalize_kernel(diffusion_matrix: coo_matrix) -> csr_matrix:
-#     row_sums = np.array(diffusion_matrix.sum(axis=1)).flatten()
-
-#     inv_sqrt_diag = 1 / np.sqrt(row_sums)
-#     new_data = (
-#         diffusion_matrix.data
-#         * inv_sqrt_diag[diffusion_matrix.row]
-#         * inv_sqrt_diag[diffusion_matrix.col]
-#     )
-
-#     normalized_kernel = csr_matrix(
-#         (new_data, (diffusion_matrix.row, diffusion_matrix.col)),
-#         shape=diffusion_matrix.shape,
-#     )
-
-#     normalized_kernel = symmetrize(normalized_kernel)
-
-#     return normalized_kernel, inv_sqrt_diag
-
 def normalize_kernel(diffusion_matrix: csr_matrix) -> bsr_matrix:
     row_sums = np.array(diffusion_matrix.sum(axis=1)).flatten()
     inv_sqrt_diag = 1 / np.sqrt(row_sums)
     
     D_inv_sqrt = diags(inv_sqrt_diag, format='csr')
     
-    # Normalize: D^(-1/2) @ K @ D^(-1/2)
     normalized_kernel = D_inv_sqrt @ diffusion_matrix @ D_inv_sqrt
     
-    # Convert to BSR with same blocksize
     normalized_kernel = normalized_kernel.tobsr()
 
     normalized_kernel = symmetrize(normalized_kernel)
     
     return normalized_kernel, inv_sqrt_diag
-
-
 
 
 def eigendecomposition(

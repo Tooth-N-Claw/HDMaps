@@ -33,6 +33,56 @@ def symmetrize(mat):
     return (mat + mat.T) / 2
 
 
+def compute_joint_kernel_linear_operator(
+    base_kernel, sample_dists: list, block_indices, maps
+):
+
+    sample_dists_gpu = []
+    for sd in sample_dists:
+        if isinstance(sd, np.ndarray):
+            sample_dists_gpu.append(cp.asarray(sd))
+        else:
+            sample_dists_gpu.append(sd)
+
+    n = base_kernel.shape[0]
+    m = sample_dists_gpu[0].shape[0]
+    total_size = n * m
+
+    for i in range(n):
+        for j in range(i+1):
+            maps[i, j] *= base_kernel[i, j]
+
+    def diffusion_matvec(v):
+        v_blocks = v.reshape(n, m)
+        result = cp.zeros((n, m))
+
+        pairs = [(i, j) for i in range(n) for j in range(i+1)]
+
+        for i, j in pairs:
+            temp = sample_dists_gpu[i] @ v_blocks[j]
+            result[i] += maps[i, j] @ temp
+
+            if i != j:
+                temp_transpose = maps[i, j].T @ v_blocks[i]
+                result[j] += sample_dists_gpu[i].T @ temp_transpose
+        return result.ravel()
+
+    print("Computing normalization...")
+    row_sums = diffusion_matvec(cp.ones(total_size))
+    inv_sqrt_diag = 1 / cp.sqrt(row_sums)
+
+    def normalized_matvec(v):
+        return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
+
+    normalized_kernel = cp_linalg.LinearOperator(
+        shape=(total_size, total_size),
+        matvec=normalized_matvec,
+        dtype=cp.float64
+    )
+
+    return normalized_kernel, inv_sqrt_diag
+
+
 def normalize_kernel(
     diffusion_matrix: cp_sparse.coo_matrix,
 ) -> tuple[cp_sparse.csr_matrix, cp.ndarray]:
