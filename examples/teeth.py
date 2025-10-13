@@ -1,7 +1,7 @@
 import numpy as np
 import pyvista as pv
 
-from scipy.sparse import load_npz, block_array
+from scipy.sparse import load_npz, block_array, bsr_matrix
 from scipy.io import loadmat
 
 from HDM import (
@@ -42,14 +42,18 @@ data_samples = load_all_off_vertices("platyrrhine/ReparametrizedOFF")
 
 
 maps = loadmat("platyrrhine/softMapMatrix.mat")["softMapMatrix"]
-fiber_kernel = compute_fiber_kernel_from_maps(maps)
+# fiber_kernel = compute_fiber_kernel_from_maps(maps)
 base_distances = load_npz(
     "example-data/teeth/base_distances.npz"
 )  # .tocoo().eliminate_zeros()
 block_indices = np.load("example-data/teeth/block_indices.npy")
 
 
-config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
+# config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
+config = HDMConfig(
+    base_sparsity=1, 
+    base_knn=4, 
+    device="cpu")
 # data_samples = [np.random.uniform(-1, 1, size=(4463, 3)) for _ in range(50)]
 
 # base_distances.data[base_distances.data >= config.base_sparsity] = 0
@@ -57,6 +61,7 @@ config = HDMConfig(base_sparsity=0.4, base_knn=4, device="cpu")
 # fiber_kernel.eliminate_zeros()
 # maps = block_array(maps, format="csr")
 
+# maps = np.array([[bsr_matrix(maps[i,j]) for i in range(maps.shape[0])] for j in range(maps.shape[1])])
 
 print("start")
 points = hdm_embed(
