@@ -4,6 +4,7 @@ import scipy.sparse as sparse
 from .utils import HDMConfig
 from scipy.sparse.linalg import LinearOperator
 from numba import jit, prange
+import multiprocessing
 # def compute_joint_kernel(
 #     base_kernel: csr_matrix, fiber_kernel: coo_matrix, block_indices: np.ndarray
 # ) -> coo_matrix:
@@ -56,71 +57,37 @@ def compute_joint_kernel_linear_operator(
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
     total_size = n * m
-    
-
-    # def diffusion_matvec(v):
-    #     v_blocks = v.reshape(n, m)
-    #     result = np.zeros((n, m))
-    #     for i in range(n):
-    #         for j in range(i+1):
-    #             temp = sample_dists[i] @ v_blocks[j]
-    #             temp = maps[i, j] @ temp
-    #             result[i] += base_kernel[i, j] * temp
-    
-    #     return result.ravel()
-
-
-    # def diffusion_matvec(v):
-    #     v_blocks = v.reshape(n, m)
-    #     result = np.zeros((n, m))
-        
-    #     # Compute lower triangle (j <= i)
-    #     for i in range(n):
-    #         for j in range(i+1):
-    #             temp = sample_dists[i] @ v_blocks[j]
-    #             temp = maps[i, j] @ temp
-    #             contribution = base_kernel[i, j] * temp
-                
-    #             # Add to result[i]
-    #             result[i] += contribution
-                
-    #             # Add transpose contribution to result[j] (for upper triangle)
-    #             if i != j:
-    #                 # blocks[j][i] = blocks[i][j].T, so blocks[j][i] @ v[i]
-    #                 # We need to compute: (maps[i,j] @ sample_dists[i]).T @ v[i]
-    #                 # = sample_dists[i].T @ maps[i,j].T @ v[i]
-    #                 temp_transpose = maps[i, j].T @ v_blocks[i]
-    #                 temp_transpose = sample_dists[i].T @ temp_transpose
-    #                 result[j] += base_kernel[i, j] * temp_transpose
-        
-    #     return result.ravel()
-    
+ 
     for i in range(n):
         for j in range(i+1):
+            # print(0)
+            # print(maps[i,j])            
             maps[i,j] *= base_kernel[i,j]
-    
+            # print(1)
+            # print(maps[i,j])
+            # print(1.1)
+            # print(sample_dists[i].shape)
+            # print(sample_dists[i].nnz)
+            maps[i,j] = sample_dists[i] @ maps[i,j]
+            # print(2)
+            # print(maps[i,j])
+
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
         result = np.zeros((n, m))
         
-        # Collect all (i,j) pairs
         pairs = [(i, j) for i in range(n) for j in range(i+1)]
-        
-        # Process in batches
-        batch_size = 10000
-        for batch_start in range(0, len(pairs), batch_size):
-            batch_pairs = pairs[batch_start:batch_start + batch_size]
-            
-            for i, j in batch_pairs:
-                temp = sample_dists[i] @ v_blocks[j]
-                result[i] += maps[i, j] @ temp
-                
-                if i != j:
-                    temp_transpose = maps[i, j].T @ v_blocks[i]
-                    result[j] += sample_dists[i].T @ temp_transpose
-        
-        return result.ravel()
 
+        for i, j in pairs:
+            result[i] += maps[i,j] @ v_blocks[j]
+            # temp = sample_dists[i] @ v_blocks[j]
+            # result[i] += maps[i, j] @ temp
+
+            if i != j:
+                result[j] += maps[i,j].T @ v_blocks[i]
+                # temp_transpose = maps[i, j].T @ v_blocks[i]
+                # result[j] += sample_dists[i].T @ temp_transpose
+        return result.ravel()
 
     print("Computing normalization...")
     row_sums = diffusion_matvec(np.ones(total_size))
@@ -137,8 +104,6 @@ def compute_joint_kernel_linear_operator(
     )
     
     return normalized_kernel, inv_sqrt_diag
-
-
 
 def symmetrize(mat):
     return (mat + mat.T) / 2

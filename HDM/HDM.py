@@ -105,7 +105,8 @@ def compute_base_distances(
         )
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
-
+        
+    print(f"sparse_dist_matrix.nnz: {sparse_dist_matrix.nnz}")
     return sparse_dist_matrix
 
 
@@ -150,6 +151,7 @@ def compute_fiber_distances(
             )
             nn.fit(data)
             sparse_dist_matrix = nn.kneighbors_graph(data, mode="distance")
+            print(sparse_dist_matrix.nnz)
             fiber_distances.append(sparse_dist_matrix)
     elif config.fiber_sparsity != None:
         for data in data_samples:
@@ -162,8 +164,12 @@ def compute_fiber_distances(
             )
             nn.fit(data)
             sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
+            # print(sparse_dist_matrix.shape)
+            print(sparse_dist_matrix.nnz)
+            # print(sparse_dist_matrix)
+            
             fiber_distances.append(sparse_dist_matrix)
-
+    # print("done")
     return fiber_distances
 
 
