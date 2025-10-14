@@ -54,22 +54,22 @@ def hdm_embed(
     backend = get_backend(config)
     
     
-    # joint_kernel = backend.compute_joint_kernel(
-    #     base_kernel, fiber_kernels, block_indices, maps
-    # )
-
-    # print("Compute joint kernel: Done.")
-
-    # normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
-
-    # print("Normalize kernel: Done.")
-
-
-
-    normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
+    joint_kernel = backend.compute_joint_kernel(
         base_kernel, fiber_kernels, block_indices, maps
     )
-    print("Construct Linear Operator: Done.")
+
+    print("Compute joint kernel: Done.")
+
+    normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
+
+    print("Normalize kernel: Done.")
+
+
+
+    # normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
+    #     base_kernel, fiber_kernels, block_indices, maps
+    # )
+    # print("Construct Linear Operator: Done.")
     
     diffusion_coordinates = backend.spectral_embedding(
         config, normalized_kernel, inv_sqrt_diag

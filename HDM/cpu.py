@@ -1,4 +1,4 @@
-from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array
+from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array, hstack
 import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
@@ -23,51 +23,82 @@ def compute_joint_kernel(
     base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
 ) -> coo_matrix:
     n = base_kernel.shape[0]
-    blocks = [[None for _ in range(n)] for _ in range(n)]
+    # blocks = [[None for _ in range(n)] for _ in range(n)]
     
-    for i in range(n):
-        for j in range(i+1):
-            prob = base_kernel[i, j]
-            map_ij = maps[i, j]
+    # for i in range(n):
+    #     for j in range(i+1):
+    #         prob = base_kernel[i, j]
+    #         map_ij = maps[i, j]
  
-            block = prob * (map_ij @ sample_dists[i])
+    #         block = prob * (map_ij @ sample_dists[i])
             
-            blocks[i][j] = csr_matrix(block)
-            if i != j:
-                blocks[j][i] = csr_matrix(block.T)
+    #         blocks[i][j] = csr_matrix(block)
+    #         if i != j:
+    #             blocks[j][i] = csr_matrix(block.T)
 
-    fiber_kernel = block_array(blocks, format='csr')
-    
-    return fiber_kernel
+    # fiber_kernel = block_array(blocks, format='csr')
+    for i in range(n):
+        for j in range(n): 
+            maps[i,j] *= base_kernel[i,j]
+
+    maps = block_array(maps)
+    sample_dists = np.array(sample_dists)
+
+    sample_dists = block_array(np.tile(hstack(sample_dists), (n,1)))
+    return maps @ sample_dists
+    # return fiber_kernel
 
 
 def compute_joint_kernel_linear_operator(
     base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
 ) -> coo_matrix:
-
+    
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
+    # sample_dists = np.stack(np.array([sample_dist.toarray() for sample_dist in sample_dists]))
     total_size = n * m
  
     for i in range(n):
         for j in range(i+1): 
             maps[i,j] *= base_kernel[i,j]
 
+    pairs = [(i, j) for i in range(n) for j in range(i+1)]
 
+    maps = block_array(maps)
+    sample_dists = np.array(sample_dists)
+    # print(type(sample_dists))
+    # print(sample_dists.shape)  
+    # print(sample_dists[i].shape)
+    sample_dists = block_array(np.tile(hstack(sample_dists), (n,1)))
+    
     def diffusion_matvec(v):
-        v_blocks = v.reshape(n, m)
-        result = np.zeros((n, m))
-        
-        pairs = [(i, j) for i in range(n) for j in range(i+1)]
+        # print(v.shape)    
+        # print(maps.shape)    
+        print(sample_dists.shape)    
+        # print((sample_dists @ v).shape)
+        # print((sample_dists @ v).T.shape)
+        return (maps * sample_dists) @ v
+    
+    # def diffusion_matvec(v):
+    #     v_blocks = v.reshape(n, m)
+    #     s = np.ones((n,n,m))
+    #     result = np.zeros((n, m))
 
-        for i, j in pairs:
-            temp = sample_dists[i] @ v_blocks[j]
-            result[i] += maps[i, j] @ temp
+    #     for i in range(n):
 
-            if i != j:
-                temp_transpose = maps[i, j].T @ v_blocks[i]
-                result[j] += sample_dists[i].T @ temp_transpose
-        return result.ravel()
+    #         s[i] = (sample_dists[i] @ v_blocks.T).T
+
+    #     for i, j in pairs:
+    #     #     temp = sample_dists[i] @ v_blocks[j]
+    #     #     result[i] += maps[i, j] @ temp
+
+    #         result[i] += maps[i, j] @ s[i, j]
+            
+    #         if i != j:
+    #             # temp_transpose = maps[i, j].T @ v_blocks[i]
+    #             # result[j] +=  sample_dists[i].T @ temp_transpose
+    #             result[j] += maps[i, j].T @ s[j, i].T
+    #     return result.ravel()
 
     print("Computing normalization...")
     row_sums = diffusion_matvec(np.ones(total_size))

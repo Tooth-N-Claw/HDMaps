@@ -37,60 +37,39 @@ def compute_joint_kernel_linear_operator(
     base_kernel, sample_dists: list, block_indices, maps
 ):
 
-    # Convert sample_dists to GPU sparse matrices
-    sample_dists_gpu = []
-    for sd in sample_dists:
-        sample_dists_gpu.append(cp_sparse.csr_matrix(sd))
+    # Convert sample_dists to GPU dense matrices for faster batched operations
+    print("Converting sample_dists to dense...")
+    sample_dists_dense = cp.stack([cp.asarray(sd.toarray()) for sd in sample_dists])
+    # sample_dists_dense_T = cp.transpose(sample_dists_dense, (0, 2, 1))
 
     n = base_kernel.shape[0]
-    m = sample_dists_gpu[0].shape[0]
+    m = sample_dists_dense.shape[1]
     total_size = n * m
 
-    # Pre-convert maps to GPU and apply base_kernel weights
+    # Keep maps sparse to save memory
     maps_gpu = {}
     for i in range(n):
         for j in range(i+1):
             maps_gpu[(i, j)] = cp_sparse.csr_matrix(maps[i, j] * base_kernel[i, j])
 
-    # Precompute pairs list once (instead of every matvec call)
+    # Precompute transposed maps
     pairs = [(i, j) for i in range(n) for j in range(i+1)]
-
-    # Precompute transposed matrices for better performance
-    sample_dists_T = [sd.T for sd in sample_dists_gpu]
-    maps_T = {(i, j): maps_gpu[(i, j)].T for i, j in pairs}
-
-    # Create streams for parallel GPU execution - one per result index
-    num_streams = min(n, 32)
-    streams = [cp.cuda.Stream() for _ in range(num_streams)]
-
-    # Precompute which pairs contribute to each result index
-    contributions = [[] for _ in range(n)]
-    for i, j in pairs:
-        contributions[i].append(('direct', i, j))
-        if i != j:
-            contributions[j].append(('transpose', i, j))
+    # maps_T = {(i, j): maps_gpu[(i, j)].T for i, j in pairs}
 
     def diffusion_matvec(v):
         v_blocks = v.reshape(n, m)
         result = cp.zeros((n, m))
 
-        # Each stream computes all contributions for specific result indices
-        for i in range(n):
-            stream = streams[i % num_streams]
+        # Batch compute all sample_dists[i] @ v_blocks[j] operations at once
+        temp_all = cp.einsum('imk,jk->ijm', sample_dists_dense, v_blocks)  # (n, n, m)
 
-            with stream:
-                # Accumulate all contributions to result[i]
-                for contrib_type, ii, jj in contributions[i]:
-                    if contrib_type == 'direct':
-                        # result[i] += maps_gpu[(i,j)] @ sample_dists_gpu[i] @ v_blocks[j]
-                        result[i] += maps_gpu[(ii, jj)] @ (sample_dists_gpu[ii] @ v_blocks[jj])
-                    else:  # transpose
-                        # result[j] += sample_dists_T[i] @ maps_T[(i,j)] @ v_blocks[i]
-                        result[i] += sample_dists_T[ii] @ (maps_T[(ii, jj)] @ v_blocks[ii])
-
-        # Synchronize all streams
-        for stream in streams:
-            stream.synchronize()
+        # Now apply sparse maps operations in loop (unavoidable since maps is sparse)
+        for i, j in pairs:
+            result[i] += maps_gpu[(i, j)] @ temp_all[i, j]
+            # if i != j:
+            #     # For transpose path, compute maps_T @ v_blocks, then apply sample_dists_T
+            #     temp_transpose = maps_T[(i, j)] @ v_blocks[i]
+            #     result[j] += sample_dists_dense_T[i] @ temp_transpose
 
         return result.ravel()
 
@@ -99,7 +78,7 @@ def compute_joint_kernel_linear_operator(
     inv_sqrt_diag = 1 / cp.sqrt(row_sums)
 
     def normalized_matvec(v):
-        return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
+        return symmetrize(inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v))
 
     normalized_kernel = cp_linalg.LinearOperator(
         shape=(total_size, total_size),
