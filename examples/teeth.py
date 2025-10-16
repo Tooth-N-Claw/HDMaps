@@ -10,9 +10,9 @@ from HDM import (
     compute_fiber_kernel_from_maps,
 )
 
-
+from scipy.sparse import identity
 from pathlib import Path
-
+from scipy.sparse import csr_matrix
 
 def load_off_vertices(path):
     with open(path, "r") as f:
@@ -41,7 +41,14 @@ data_samples = load_all_off_vertices("platyrrhine/ReparametrizedOFF")
 # plotter.show()
 
 
-maps = loadmat("platyrrhine/softMapMatrix.mat")["softMapMatrix"]
+# maps = loadmat("platyrrhine/softMapMatrix.mat")["softMapMatrix"]
+n = len(data_samples)
+maps = np.empty((n, n), dtype=object)
+for i in range(n):
+    for j in range(n):
+        maps[i, j] = identity(data_samples[0].shape[0])
+    
+
 # fiber_kernel = compute_fiber_kernel_from_maps(maps)
 base_distances = load_npz(
     "example-data/teeth/base_distances.npz"
@@ -62,7 +69,7 @@ config = HDMConfig(
     fiber_knn=4,
     # base_sparsity=0.1,
     # fiber_sparsity=0.1,
-    device="cpu")
+    device="gpu")
 # data_samples = [np.random.uniform(-1, 1, size=(4463, 3)) for _ in range(50)]
 
 # base_distances.data[base_distances.data >= config.base_sparsity] = 0

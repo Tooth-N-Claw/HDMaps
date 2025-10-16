@@ -4,7 +4,6 @@ from scipy.sparse import coo_matrix, csr_matrix
 from sklearn.neighbors import NearestNeighbors
 
 from .utils import HDMConfig, compute_block_indices, get_backend
-from itertools import permutations
 
 
 def hdm_embed(
@@ -52,24 +51,23 @@ def hdm_embed(
 
     ## From here on we can use gpu to speed up the computation, if the user wants to
     backend = get_backend(config)
-    
-    
-    joint_kernel = backend.compute_joint_kernel(
-        base_kernel, fiber_kernels, block_indices, maps
-    )
 
-    print("Compute joint kernel: Done.")
-
-    normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
-
-    print("Normalize kernel: Done.")
-
-
-
-    # normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
+    # joint_kernel = backend.compute_joint_kernel(
     #     base_kernel, fiber_kernels, block_indices, maps
     # )
-    # print("Construct Linear Operator: Done.")
+
+    # print("Compute joint kernel: Done.")
+
+    # normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
+
+    # print("Normalize kernel: Done.")
+
+
+
+    normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
+        base_kernel, fiber_kernels, block_indices, maps
+    )
+    print("Construct Linear Operator: Done.")
     
     diffusion_coordinates = backend.spectral_embedding(
         config, normalized_kernel, inv_sqrt_diag
@@ -221,4 +219,5 @@ def compute_fiber_spatial(
         for fiber in fiber_distances:
             fiber_kernel = compute_kernel(fiber, config.fiber_epsilon)
             fiber_kernels.append(fiber_kernel)
+        fiber_kernel =  np.array(fiber_kernels)
     return fiber_kernels

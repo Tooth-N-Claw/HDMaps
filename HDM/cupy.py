@@ -37,48 +37,28 @@ def compute_joint_kernel_linear_operator(
     base_kernel, sample_dists: list, block_indices, maps
 ):
 
-    # Convert sample_dists to GPU dense matrices for faster batched operations
-    print("Converting sample_dists to dense...")
-    sample_dists_dense = cp.stack([cp.asarray(sd.toarray()) for sd in sample_dists])
-    # sample_dists_dense_T = cp.transpose(sample_dists_dense, (0, 2, 1))
-
     n = base_kernel.shape[0]
-    m = sample_dists_dense.shape[1]
+    m = sample_dists[0].shape[0]
     total_size = n * m
 
-    # Keep maps sparse to save memory
-    maps_gpu = {}
-    for i in range(n):
-        for j in range(i+1):
-            maps_gpu[(i, j)] = cp_sparse.csr_matrix(maps[i, j] * base_kernel[i, j])
+    base_kernel = base_kernel.toarray()
+    maps = maps * base_kernel
 
-    # Precompute transposed maps
-    pairs = [(i, j) for i in range(n) for j in range(i+1)]
-    # maps_T = {(i, j): maps_gpu[(i, j)].T for i, j in pairs}
+    maps = cp_sparse.bmat([[cp_sparse.csr_matrix(maps[i, j]) for j in range(n)] for i in range(n)], format='csr')
+
+    # Build block diagonal matrix using bmat
+    sample_dists_gpu = [cp_sparse.csr_matrix(sd) for sd in sample_dists]
+    sample_dists_blocks = [[sample_dists_gpu[i] if i == j else None for j in range(n)] for i in range(n)]
+    sample_dists = cp_sparse.bmat(sample_dists_blocks, format='csr')
 
     def diffusion_matvec(v):
-        v_blocks = v.reshape(n, m)
-        result = cp.zeros((n, m))
+        return 0.5 * (maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v))
 
-        # Batch compute all sample_dists[i] @ v_blocks[j] operations at once
-        temp_all = cp.einsum('imk,jk->ijm', sample_dists_dense, v_blocks)  # (n, n, m)
-
-        # Now apply sparse maps operations in loop (unavoidable since maps is sparse)
-        for i, j in pairs:
-            result[i] += maps_gpu[(i, j)] @ temp_all[i, j]
-            # if i != j:
-            #     # For transpose path, compute maps_T @ v_blocks, then apply sample_dists_T
-            #     temp_transpose = maps_T[(i, j)] @ v_blocks[i]
-            #     result[j] += sample_dists_dense_T[i] @ temp_transpose
-
-        return result.ravel()
-
-    print("Computing normalization...")
     row_sums = diffusion_matvec(cp.ones(total_size))
     inv_sqrt_diag = 1 / cp.sqrt(row_sums)
 
     def normalized_matvec(v):
-        return symmetrize(inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v))
+        return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
 
     normalized_kernel = cp_linalg.LinearOperator(
         shape=(total_size, total_size),

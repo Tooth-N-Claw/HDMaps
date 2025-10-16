@@ -7,7 +7,7 @@ from scipy.sparse import eye as speye
 directory_path = "example-data/wing"
 files = [f for f in os.listdir(directory_path) if f.endswith(".txt")]
 print(len(files))
-files = files[:100]
+files = files[:600]
 data_samples = [
     np.loadtxt(os.path.join(directory_path, file), delimiter=",") for file in files
 ]
@@ -16,18 +16,18 @@ n = len(files)
 maps = np.empty((n, n), dtype=object)
 for i in range(n):
     for j in range(n):
-        maps[i, j] = csr_matrix(np.eye(data_samples[0].shape[0]))
+        maps[i, j] = speye(data_samples[0].shape[0], format='csr')
         
 
 if __name__ == '__main__':
     config = HDMConfig(
-        base_epsilon=0.004,
-        fiber_epsilon=0.001,
+        base_epsilon=0.03,
+        fiber_epsilon=0.002,
         base_sparsity=1,
         base_knn = None,
         fiber_sparsity=1,
         fiber_knn=None,
-        device="cpu"
+        device="gpu"
     )
 
     diffusion_coords = hdm_embed(data_samples=data_samples, config=config, fiber_kernel=None, maps=maps)
