@@ -62,7 +62,7 @@ def compute_joint_kernel_linear_operator(
 
     normalized_kernel = cp_linalg.LinearOperator(
         shape=(total_size, total_size),
-        matvec=normalized_matvec,
+        matvec=normalized_matvec, 
         dtype=cp.float64
     )
 

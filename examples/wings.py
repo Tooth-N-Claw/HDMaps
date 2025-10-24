@@ -7,7 +7,7 @@ from scipy.sparse import eye as speye
 directory_path = "example-data/wing"
 files = [f for f in os.listdir(directory_path) if f.endswith(".txt")]
 print(len(files))
-files = files[:600]
+files = files[:1250]
 data_samples = [
     np.loadtxt(os.path.join(directory_path, file), delimiter=",") for file in files
 ]

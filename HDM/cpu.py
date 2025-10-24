@@ -58,27 +58,24 @@ def compute_joint_kernel_linear_operator(
     
     base_kernel = base_kernel.toarray()
     maps = maps * base_kernel
-    print(1)
     maps = block_array(maps)
-    print(2)
     sample_dists = block_diag(sample_dists)
     
     def diffusion_matvec(v):
         return 0.5 * ( maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v) )
-    print(5)
 
     row_sums = diffusion_matvec(np.ones(total_size))
     inv_sqrt_diag = 1 / np.sqrt(row_sums)
-    print(6)
+    
     def normalized_matvec(v):
         return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
-    print(7)
+    
     normalized_kernel = LinearOperator(
         shape=(total_size, total_size),
         matvec=normalized_matvec,
         dtype=np.float32
     )
-    print(8)
+
     return normalized_kernel, inv_sqrt_diag
 
 def symmetrize(mat):
