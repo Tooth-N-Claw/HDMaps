@@ -7,7 +7,7 @@ from scipy.sparse import eye as speye
 directory_path = "example-data/wing"
 files = [f for f in os.listdir(directory_path) if f.endswith(".txt")]
 print(len(files))
-files = files[:1250]
+files = files[:500]  # Limit to 5 samples for initial testing
 data_samples = [
     np.loadtxt(os.path.join(directory_path, file), delimiter=",") for file in files
 ]
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         base_knn = None,
         fiber_sparsity=1,
         fiber_knn=None,
-        device="gpu"
+        device="cpu"
     )
 
     diffusion_coords = hdm_embed(data_samples=data_samples, config=config, fiber_kernel=None, maps=maps)

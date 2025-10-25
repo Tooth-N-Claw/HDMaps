@@ -1,53 +1,8 @@
-from scipy.sparse import csr_matrix, coo_matrix, bsr_matrix, diags, block_array, hstack, block_diag, bmat
+from scipy.sparse import csr_matrix, coo_matrix, block_array, block_diag
 import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
 from scipy.sparse.linalg import LinearOperator
-
-# def compute_joint_kernel(
-#     base_kernel: csr_matrix, fiber_kernel: coo_matrix, block_indices: np.ndarray
-# ) -> coo_matrix:
-#     fiber_base_row = np.searchsorted(block_indices, fiber_kernel.row, side="right") - 1
-#     fiber_base_col = np.searchsorted(block_indices, fiber_kernel.col, side="right") - 1
-#     block_vals = np.array(base_kernel[fiber_base_row, fiber_base_col]).reshape(-1)
-
-#     joint_data = fiber_kernel.data * block_vals
-#     joint_kernel = coo_matrix(
-#         (joint_data, (fiber_kernel.row, fiber_kernel.col)), shape=fiber_kernel.shape
-#     )
-
-#     joint_kernel.eliminate_zeros()
-#     return joint_kernel
-
-def compute_joint_kernel(
-    base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
-) -> coo_matrix:
-    n = base_kernel.shape[0]
-    blocks = [[None for _ in range(n)] for _ in range(n)]
-    
-    for i in range(n):
-        for j in range(n):
-            prob = base_kernel[i, j]
-            map_ij = maps[i, j]
- 
-            block = prob * (map_ij @ sample_dists[j])
-            
-            blocks[i][j] = csr_matrix(block)
-            # if i != j:
-            #     blocks[j][i] = csr_matrix(block.T)
-
-    fiber_kernel = block_array(blocks, format='csr')
-    return symmetrize(fiber_kernel)
-
-    # for i in range(n):
-    #     for j in range(n): 
-    #         maps[i,j] *= base_kernel[i,j]
-
-    # maps = block_array(maps)
-
-    # sample_dists = block_diag(sample_dists)
-    # return symmetrize(maps @ sample_dists)
-
 
 def compute_joint_kernel_linear_operator(
     base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
@@ -64,6 +19,7 @@ def compute_joint_kernel_linear_operator(
     def diffusion_matvec(v):
         return 0.5 * ( maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v) )
 
+
     row_sums = diffusion_matvec(np.ones(total_size))
     inv_sqrt_diag = 1 / np.sqrt(row_sums)
     
@@ -76,24 +32,6 @@ def compute_joint_kernel_linear_operator(
         dtype=np.float32
     )
 
-    return normalized_kernel, inv_sqrt_diag
-
-def symmetrize(mat):
-    return (mat + mat.T) / 2
-
-
-def normalize_kernel(diffusion_matrix: csr_matrix) -> bsr_matrix:
-    row_sums = np.array(diffusion_matrix.sum(axis=1)).flatten()
-    inv_sqrt_diag = 1 / np.sqrt(row_sums)
-    D_inv_sqrt = diags(inv_sqrt_diag, format='csr')
-
-    
-    normalized_kernel = D_inv_sqrt @ diffusion_matrix @ D_inv_sqrt
-    
-    normalized_kernel = normalized_kernel.tobsr()
-
-    normalized_kernel = symmetrize(normalized_kernel)
-    
     return normalized_kernel, inv_sqrt_diag
 
 

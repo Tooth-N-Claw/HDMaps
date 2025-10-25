@@ -68,6 +68,10 @@ def get_backend(config: HDMConfig):
         from . import cupy
 
         return cupy
+    elif config.device == "jax":
+        from . import jax as jax_backend
+
+        return jax_backend
     else:
         raise ValueError(f"Unsupported device: {config.device}")
 

@@ -2,6 +2,7 @@ import numpy as np
 from typing import Optional
 from scipy.sparse import coo_matrix, csr_matrix
 from sklearn.neighbors import NearestNeighbors
+from joblib import Parallel, delayed
 
 from .utils import HDMConfig, compute_block_indices, get_backend
 
@@ -35,7 +36,7 @@ def hdm_embed(
     Returns:
         np.ndarray: Diffusion coordinates from the joint HDM embedding.
     """
-
+    print(1)
     base_kernel = compute_base_spatial(
         config, data_samples, base_distances, base_kernel
     )
@@ -49,20 +50,7 @@ def hdm_embed(
     if block_indices is None and data_samples is not None:
         block_indices = compute_block_indices(data_samples)
 
-    ## From here on we can use gpu to speed up the computation, if the user wants to
     backend = get_backend(config)
-
-    # joint_kernel = backend.compute_joint_kernel(
-    #     base_kernel, fiber_kernels, block_indices, maps
-    # )
-
-    # print("Compute joint kernel: Done.")
-
-    # normalized_kernel, inv_sqrt_diag = backend.normalize_kernel(joint_kernel)
-
-    # print("Normalize kernel: Done.")
-
-
 
     normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
         base_kernel, fiber_kernels, block_indices, maps
@@ -84,11 +72,6 @@ def compute_base_distances(
     print("Assumes all data samples has same shape")
     data = np.array([sample.flatten() for sample in data_samples])
     n = len(data_samples)
-    dist = np.zeros((n, n))
-
-    # for i, j in permutations(range(50), 2):
-    #     dist[i, j] = np.linalg.norm(data_samples[i] - data_samples[j])
-    # return csr_matrix(dist)
 
     if config.base_knn != None:
         nn = NearestNeighbors(
@@ -106,59 +89,33 @@ def compute_base_distances(
     return sparse_dist_matrix
 
 
-# def compute_fiber_distances(
-#     config: HDMConfig, data_samples: list[np.ndarray]
-# ) -> csr_matrix:
-#     data = np.vstack(data_samples)
-
-#     if config.fiber_knn != None:
-#         nn = NearestNeighbors(
-#             n_neighbors=config.fiber_knn,
-#             algorithm="auto",
-#             metric="euclidean",
-#             n_jobs=-1,
-#         )
-#         nn.fit(data)
-#         sparse_dist_matrix = nn.kneighbors_graph(data, mode="distance")
-#     elif config.fiber_sparsity != None:
-#         nn = NearestNeighbors(
-#             radius=config.fiber_sparsity,
-#             algorithm="auto",
-#             metric="euclidean",
-#             n_jobs=-1,
-#         )
-#         nn.fit(data)
-#         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
-
-#     return sparse_dist_matrix
-
 def compute_fiber_distances(
     config: HDMConfig, data_samples: list[np.ndarray]
-) -> csr_matrix:
-    fiber_distances = []
-    if config.fiber_knn != None:
-        for data in data_samples:
+) -> list[csr_matrix]:
+
+    def process_sample(data):
+        if config.fiber_knn is not None:
             nn = NearestNeighbors(
                 n_neighbors=config.fiber_knn,
                 algorithm="auto",
                 metric="euclidean",
-                n_jobs=-1,
+                n_jobs=1,
             )
             nn.fit(data)
-            sparse_dist_matrix = nn.kneighbors_graph(data, mode="distance")
-            fiber_distances.append(sparse_dist_matrix)
-    elif config.fiber_sparsity != None:
-        for data in data_samples:
-
+            return nn.kneighbors_graph(data, mode="distance")
+        elif config.fiber_sparsity is not None:
             nn = NearestNeighbors(
                 radius=config.fiber_sparsity,
                 algorithm="auto",
                 metric="euclidean",
-                n_jobs=-1,
+                n_jobs=1,
             )
             nn.fit(data)
-            sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
-            fiber_distances.append(sparse_dist_matrix)
+            return nn.radius_neighbors_graph(data, mode="distance")
+
+    fiber_distances = Parallel(n_jobs=-1, backend='threading')(
+        delayed(process_sample)(data) for data in data_samples
+    )
 
     return fiber_distances
 
@@ -189,20 +146,6 @@ def compute_base_spatial(
         base_kernel = compute_kernel(base_distances, config.base_epsilon)
 
     return base_kernel
-
-
-# def compute_fiber_spatial(
-#     config: HDMConfig, data_samples, fiber_distances, fiber_kernel
-# ) -> coo_matrix:
-#     """"""
-#     if fiber_distances is None and fiber_kernel is None:
-#         fiber_distances = compute_fiber_distances(config, data_samples)
-#     elif fiber_distances is not None and fiber_kernel is None:
-#         fiber_distances.data[fiber_distances.data >= config.fiber_sparsity] = 0
-#         fiber_distances.eliminate_zeros()
-#     if fiber_kernel is None:
-#         fiber_kernel = compute_kernel(fiber_distances, config.fiber_epsilon)
-#     return fiber_kernel.tocoo()
 
 
 def compute_fiber_spatial(
