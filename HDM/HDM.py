@@ -4,7 +4,7 @@ from scipy.sparse import coo_matrix, csr_matrix
 from sklearn.neighbors import NearestNeighbors
 from joblib import Parallel, delayed
 
-from .utils import HDMConfig, compute_block_indices, get_backend
+from .utils import HDMConfig, get_backend
 
 
 def hdm_embed(
@@ -27,7 +27,7 @@ def hdm_embed(
     Parameters:
         config (HDMConfig): Configuration object specifying HDM parameters.
         data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
-        block_indices (np.ndarray, optional): Block indices specifying data partitioning.
+        block_indices (np.ndarray, optional): Block indices specifying data partitioning. WARNING: this paramter is not used at the moment, the code assumes meshes have the same amount of points. An older version of the code supports this, however a bug is present in the code, 
         base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
         fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
         base_distances (coo_matrix, optional): Precomputed base distances.
@@ -36,7 +36,7 @@ def hdm_embed(
     Returns:
         np.ndarray: Diffusion coordinates from the joint HDM embedding.
     """
-    print(1)
+    print("Compute HDM Embedding")
     base_kernel = compute_base_spatial(
         config, data_samples, base_distances, base_kernel
     )
@@ -113,7 +113,7 @@ def compute_fiber_distances(
             nn.fit(data)
             return nn.radius_neighbors_graph(data, mode="distance")
 
-    fiber_distances = Parallel(n_jobs=-1, backend='threading')(
+    fiber_distances = Parallel(n_jobs=-1, backend='loky')(
         delayed(process_sample)(data) for data in data_samples
     )
 

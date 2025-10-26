@@ -1,6 +1,5 @@
 import jax
 import jax.numpy as jnp
-from jax import vmap, lax
 from jax.experimental import sparse as jsparse
 from jax.experimental.sparse.linalg import lobpcg_standard
 from scipy.sparse import csr_matrix, block_array, block_diag
