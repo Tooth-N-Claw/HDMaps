@@ -47,8 +47,8 @@ def hdm_embed(
     )
     print("Compute fiber kernel: Done.")
 
-    if block_indices is None and data_samples is not None:
-        block_indices = compute_block_indices(data_samples)
+    # if block_indices is None and data_samples is not None:
+    #     block_indices = compute_block_indices(data_samples)
 
     backend = get_backend(config)
 

@@ -14,37 +14,51 @@ def compute_joint_kernel_linear_operator(
     block_indices: jnp.ndarray,
     maps
 ):
+    print("Compute Joint Kernel Linear Operator (JAX)")
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
     total_size = n * m
 
     print(1)
-    # Apply base_kernel weights to maps (scipy operation)
     base_kernel_dense = base_kernel.toarray()
+    del base_kernel
     maps = maps * base_kernel_dense
+    del base_kernel_dense
     print(2)
 
-    # Create single large sparse matrices using scipy
-    maps_big = block_array(maps)
+    maps = block_array(maps)
+    maps_T = maps.T
+    print(2.2)
+    maps_bcoo = jsparse.BCSR.from_scipy_sparse(maps)
+    print(2.3)
+    maps_bcoo_T = jsparse.BCSR.from_scipy_sparse(maps_T)
+    del maps
+    del maps_T
+    print(2.4)
     sample_dists_big = block_diag(sample_dists)
+    sample_dists_big_T = sample_dists_big.T 
     print(3)
 
-    # Convert to JAX BCOO
-    maps_bcoo = jsparse.BCOO.from_scipy_sparse(maps_big)
-    sample_dists_bcoo = jsparse.BCOO.from_scipy_sparse(sample_dists_big)
+    sample_dists_bcoo = jsparse.BCSR.from_scipy_sparse(sample_dists_big)
+    sample_dists_bcoo_T = jsparse.BCSR.from_scipy_sparse(sample_dists_big_T)
+    del sample_dists_big_T
+    del sample_dists_big
     print(4)
-
+    
+    @jax.jit
     def diffusion_matvec(v):
-        # Simple matrix operations, same as cpu.py
-        return 0.5 * (maps_bcoo @ (sample_dists_bcoo @ v) + sample_dists_bcoo.T @ (maps_bcoo.T @ v))
+        return 0.5 * (maps_bcoo @ (sample_dists_bcoo @ v) + sample_dists_bcoo_T @ (maps_bcoo_T @ v))
+
+    # @jax.jit
+    # def diffusion_matvec(v):
+    #     return 0.5 * (maps_bcoo @ (sample_dists_bcoo @ v) + (sample_dists_bcoo.T @ v).T @ maps_bcoo) @ sample_dists_bcoo
 
     row_sums = diffusion_matvec(jnp.ones(total_size))
     inv_sqrt_diag = 1.0 / jnp.sqrt(row_sums)
 
+    @jax.jit
     def normalized_matvec(v):
-        if v.ndim == 2:
-            return inv_sqrt_diag[:, None] * diffusion_matvec(inv_sqrt_diag[:, None] * v)
-        return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
+        return inv_sqrt_diag[:, None] * diffusion_matvec(inv_sqrt_diag[:, None] * v)
 
     return normalized_matvec, inv_sqrt_diag
 
@@ -56,7 +70,7 @@ def eigendecomposition(config, matvec_fn, matrix_size):
 
     key = jax.random.PRNGKey(42)
     X0 = jax.random.normal(key, (matrix_size, k), dtype=jnp.float32)
-
+    print("start")
     eigvals, eigvecs, n_iter = lobpcg_standard(
         A=matvec_fn,
         X=X0,

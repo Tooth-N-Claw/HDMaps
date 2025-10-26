@@ -69,7 +69,7 @@ config = HDMConfig(
     fiber_knn=4,
     # base_sparsity=0.1,
     # fiber_sparsity=0.1,
-    device="cpu")
+    device="jax")
 # data_samples = [np.random.uniform(-1, 1, size=(4463, 3)) for _ in range(50)]
 
 # base_distances.data[base_distances.data >= config.base_sparsity] = 0
@@ -89,7 +89,7 @@ points = hdm_embed(
 )
 
 
-points = pv.PolyData(points)
-plotter = pv.Plotter()
-plotter.add_mesh(points, color="red", point_size=5, render_points_as_spheres=True)
-plotter.show()
+# points = pv.PolyData(points)
+# plotter = pv.Plotter()
+# plotter.add_mesh(points, color="red", point_size=5, render_points_as_spheres=True)
+# plotter.show()
