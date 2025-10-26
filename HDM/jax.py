@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 from jax.experimental import sparse as jsparse
 from jax.experimental.sparse.linalg import lobpcg_standard
-from scipy.sparse import csr_matrix, block_array, block_diag
+from scipy.sparse import csr_matrix, block_array, block_diag, kron, eye, diags
 import numpy as np
 from .utils import HDMConfig
 
@@ -13,53 +13,40 @@ def compute_joint_kernel_linear_operator(
     block_indices: jnp.ndarray,
     maps
 ):
-    print("Compute Joint Kernel Linear Operator (JAX)")
+    """Creates the normalized joint kernel as a JAX function. Jax does not however good support for sparse matrices, so is first done in scipy, then converted to jax sparse matrices."""
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
     total_size = n * m
 
-    print(1)
-    base_kernel_dense = base_kernel.toarray()
-    del base_kernel
-    maps = maps * base_kernel_dense
-    del base_kernel_dense
-    print(2)
 
+    base_kernel.multiply(0.5) # we multiply by 0.5 here for symmetry when we later in diffison_matecv do 0.5 * (M D + D^T M^T), we moved the 0.5 for efficiency
     maps = block_array(maps)
-    maps_T = maps.T
-    print(2.2)
-    maps_bcoo = jsparse.BCSR.from_scipy_sparse(maps)
-    print(2.3)
-    maps_bcoo_T = jsparse.BCSR.from_scipy_sparse(maps_T)
-    del maps
-    del maps_T
-    print(2.4)
-    sample_dists_big = block_diag(sample_dists)
-    sample_dists_big_T = sample_dists_big.T 
-    print(3)
+    maps = kron(base_kernel, eye(m, format='csr')).multiply(maps)
+    sample_dists_scipy = block_diag(sample_dists) 
 
-    sample_dists_bcoo = jsparse.BCSR.from_scipy_sparse(sample_dists_big)
-    sample_dists_bcoo_T = jsparse.BCSR.from_scipy_sparse(sample_dists_big_T)
-    del sample_dists_big_T
-    del sample_dists_big
-    print(4)
-    
-    @jax.jit
     def diffusion_matvec(v):
-        return 0.5 * (maps_bcoo @ (sample_dists_bcoo @ v) + sample_dists_bcoo_T @ (maps_bcoo_T @ v))
-
-    # @jax.jit
-    # def diffusion_matvec(v):
-    #     return 0.5 * (maps_bcoo @ (sample_dists_bcoo @ v) + (sample_dists_bcoo.T @ v).T @ maps_bcoo) @ sample_dists_bcoo
+        return maps @ (sample_dists_scipy @ v) + sample_dists_scipy.T @ (maps.T @ v)
 
     row_sums = diffusion_matvec(jnp.ones(total_size))
     inv_sqrt_diag = 1.0 / jnp.sqrt(row_sums)
+    inv_sqrt_diag_np = np.array(inv_sqrt_diag) 
+    D_inv_sqrt = diags(inv_sqrt_diag_np, format='csr')
+
+    # precomputes normalized components to offload normalized_diffusion_matvec function since it will be called many times
+    sample_dists = sample_dists_scipy @ D_inv_sqrt
+    maps = D_inv_sqrt @ maps
+
+    # At the moment of writing this code (jax 0.8.0) jax BCSR do not support tranpsose operation, so we precompute maps_T and sample_dists_T
+    maps_T = jsparse.BCSR.from_scipy_sparse(maps.T)    
+    maps = jsparse.BCSR.from_scipy_sparse(maps)
+    sample_dists_T = jsparse.BCSR.from_scipy_sparse(sample_dists.T)
+    sample_dists = jsparse.BCSR.from_scipy_sparse(sample_dists)
 
     @jax.jit
-    def normalized_matvec(v):
-        return inv_sqrt_diag[:, None] * diffusion_matvec(inv_sqrt_diag[:, None] * v)
+    def normalized_diffusion_matvec(v):
+        return maps @ (sample_dists @ v) + sample_dists_T @ (maps_T @ v)
 
-    return normalized_matvec, inv_sqrt_diag
+    return normalized_diffusion_matvec, inv_sqrt_diag
 
 
 def eigendecomposition(config, matvec_fn, matrix_size):
@@ -69,7 +56,7 @@ def eigendecomposition(config, matvec_fn, matrix_size):
 
     key = jax.random.PRNGKey(42)
     X0 = jax.random.normal(key, (matrix_size, k), dtype=jnp.float32)
-    print("start")
+
     eigvals, eigvecs, n_iter = lobpcg_standard(
         A=matvec_fn,
         X=X0,

@@ -1,4 +1,4 @@
-from scipy.sparse import csr_matrix, coo_matrix, block_array, block_diag
+from scipy.sparse import csr_matrix, coo_matrix, block_array, block_diag, kron, eye
 import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
@@ -11,13 +11,14 @@ def compute_joint_kernel_linear_operator(
     m = sample_dists[0].shape[0]
     total_size = n * m
     
-    base_kernel = base_kernel.toarray()
-    maps = maps * base_kernel
+    base_kernel.multiply(0.5) # we multiply by 0.5 here for symmetry when we later in diffison_matecv do 0.5 * (M D + D^T M^T), we moved the 0.5 for efficiency
     maps = block_array(maps)
-    sample_dists = block_diag(sample_dists)
+    maps = kron(base_kernel, eye(m, format='csr')).multiply(maps)
     
+    sample_dists = block_diag(sample_dists) 
+
     def diffusion_matvec(v):
-        return 0.5 * ( maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v) )
+        return maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v)
 
 
     row_sums = diffusion_matvec(np.ones(total_size))

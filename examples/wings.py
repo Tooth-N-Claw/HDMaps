@@ -35,7 +35,7 @@ if __name__ == '__main__':
         base_knn = None,
         fiber_sparsity=1,
         fiber_knn=None,
-        device="jax"
+        device="cpu"
     )
 
     diffusion_coords = hdm_embed(data_samples=data_samples, config=config, fiber_kernel=None, maps=maps)

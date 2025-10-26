@@ -24,7 +24,8 @@ dependencies = [
     "pyvista>=0.45,<1.0",
     "trimesh>=4.6,<5.0",
     "tqdm>=4.67,<5.0",
-    "matplotlib>=3,<4.0"
+    "matplotlib>=3,<4.0",
+    "jax>=0.8,<0.8"
 ]
 
 [project.urls]
