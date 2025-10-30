@@ -1,8 +1,54 @@
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
-from HDM import cpu
+from HDM import hdm_embed, HDMConfig
 
+def test_cpu_hdm_runs():
+    samples = [np.random.rand(10, 3) for _ in range(5)]
+    config = HDMConfig(
+        base_epsilon=0.5,
+        fiber_epsilon=0.5,
+        base_knn=3,
+        fiber_knn=3,
+        device="cpu",
+        verbose=False
+    )
+    maps = np.empty((5, 5), dtype=object)
+    for i in range(5):
+        for j in range(5):
+            if i == j:
+                maps[i, j] = csr_matrix(np.eye(10))
+            else:
+                maps[i, j] = csr_matrix((10, 10))       
+    diffusion_coords = hdm_embed(
+        config=config,
+        data_samples=samples,
+        maps=maps
+    )
+    
+    
+def test_jax_hdm_runs():
+    samples = [np.random.rand(10, 3) for _ in range(5)]
+    config = HDMConfig(
+        base_epsilon=0.5,
+        fiber_epsilon=0.5,
+        base_knn=3,
+        fiber_knn=3,
+        device="jax",
+        verbose=False
+    )
+    maps = np.empty((5, 5), dtype=object)
+    for i in range(5):
+        for j in range(5):
+            if i == j:
+                maps[i, j] = csr_matrix(np.eye(10))
+            else:
+                maps[i, j] = csr_matrix((10, 10))       
+    diffusion_coords = hdm_embed(
+        config=config,
+        data_samples=samples,
+        maps=maps
+    )
 
 # def test_compute_joint_kernel():
 #     # Define base kernel as CSR (Compressed Sparse Row)
