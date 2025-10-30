@@ -69,9 +69,8 @@ def hdm_embed(
 def compute_base_distances(
     config: HDMConfig, data_samples: list[np.ndarray]
 ) -> csr_matrix:
-    print("Assumes all data samples has same shape")
+    print("Assumes all samples have the same shape")
     data = np.array([sample.flatten() for sample in data_samples])
-    n = len(data_samples)
 
     if config.base_knn != None:
         nn = NearestNeighbors(
@@ -85,7 +84,7 @@ def compute_base_distances(
         )
         nn.fit(data)
         sparse_dist_matrix = nn.radius_neighbors_graph(data, mode="distance")
-        
+    sparse_dist_matrix.eliminate_zeros()
     return sparse_dist_matrix
 
 

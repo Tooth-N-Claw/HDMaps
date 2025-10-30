@@ -1,3 +1,4 @@
+import time
 import jax
 import jax.numpy as jnp
 from jax.experimental import sparse as jsparse
@@ -20,8 +21,18 @@ def compute_joint_kernel_linear_operator(
 
 
     base_kernel.multiply(0.5) # we multiply by 0.5 here for symmetry when we later in diffison_matecv do 0.5 * (M D + D^T M^T), we moved the 0.5 for efficiency
-    maps = block_array(maps)
-    maps = kron(base_kernel, eye(m, format='csr')).multiply(maps)
+    
+    # Iterate over CSR structure without materializing rows/cols arrays
+    for i in range(base_kernel.shape[0]):
+        start = base_kernel.indptr[i]
+        end = base_kernel.indptr[i + 1]
+        for idx in range(start, end):
+            j = base_kernel.indices[idx]
+            value = base_kernel.data[idx]
+            maps[i][j].data *= value  # In-place multiplication
+
+    maps = block_array(maps, format='csr')
+    
     sample_dists_scipy = block_diag(sample_dists) 
 
     def diffusion_matvec(v):

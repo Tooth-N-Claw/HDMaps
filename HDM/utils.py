@@ -8,7 +8,7 @@ class HDMConfig(NamedTuple):
     base_epsilon: float = 0.04
     fiber_epsilon: float = 0.08
     num_eigenvectors: int = 4
-    device: str | None = "cpu"  # 'cpu' or 'gpu'
+    device: str | None = "cpu"  # 'cpu', 'cpu_ragged', 'jax', or 'gpu'
     base_metric: str = "frobenius"
     fiber_metric: str = "euclidean"
     base_sparsity: float = None
@@ -64,6 +64,10 @@ def get_backend(config: HDMConfig):
         from . import cpu
 
         return cpu
+    elif config.device == "cpu_ragged":
+        from . import cpu_ragged
+
+        return cpu_ragged
     elif config.device == "gpu":
         from . import cupy
 

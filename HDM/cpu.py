@@ -1,4 +1,4 @@
-from scipy.sparse import csr_matrix, coo_matrix, block_array, block_diag, kron, eye
+from scipy.sparse import csr_matrix, coo_matrix, block_array, block_diag, kron, eye, diags, lil_matrix
 import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
@@ -10,10 +10,19 @@ def compute_joint_kernel_linear_operator(
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
     total_size = n * m
-    
-    base_kernel.multiply(0.5) # we multiply by 0.5 here for symmetry when we later in diffison_matecv do 0.5 * (M D + D^T M^T), we moved the 0.5 for efficiency
-    maps = block_array(maps)
-    maps = kron(base_kernel, eye(m, format='csr')).multiply(maps)
+
+    base_kernel.multiply(0.5) # we multiply by 0.5 here or symmetry when we later in diffison_matecv do 0.5 * (M D + D^T M^T), we moved the 0.5 for efficiency
+
+    # Iterate over CSR structure without materializing rows/cols arrays
+    for i in range(base_kernel.shape[0]):
+        start = base_kernel.indptr[i]
+        end = base_kernel.indptr[i + 1]
+        for idx in range(start, end):
+            j = base_kernel.indices[idx]
+            value = base_kernel.data[idx]
+            maps[i][j].data *= value  # In-place multiplication
+
+    maps = block_array(maps, format='csr')
     
     sample_dists = block_diag(sample_dists) 
 
@@ -23,13 +32,20 @@ def compute_joint_kernel_linear_operator(
 
     row_sums = diffusion_matvec(np.ones(total_size))
     inv_sqrt_diag = 1 / np.sqrt(row_sums)
+    D_inv_sqrt = diags(inv_sqrt_diag, format='csr')
+    # precomputes normalized components to offload normalized_diffusion_matvec function since it will be called many times
+    sample_dists = sample_dists @ D_inv_sqrt
+    maps = D_inv_sqrt @ maps
     
-    def normalized_matvec(v):
-        return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
+    # def normalized_matvec(v):
+    #     return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
     
+    def normalized_diffusion_matvec(v):
+        return maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v)
+
     normalized_kernel = LinearOperator(
         shape=(total_size, total_size),
-        matvec=normalized_matvec,
+        matvec=normalized_diffusion_matvec,
         dtype=np.float32
     )
 
