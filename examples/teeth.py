@@ -1,36 +1,58 @@
 import numpy as np
-import pyvista as pv
-import matplotlib.pyplot as plt
 
 from scipy.sparse import load_npz
-from scipy.io import loadmat
-
+import pyvista as pv
 from HDM import (
     hdm_embed,
     HDMConfig,
-    compute_fiber_kernel_from_maps, 
 )
 
+from pathlib import Path
+from scipy.io import loadmat
+
+def load_off_vertices(path):
+    with open(path, "r") as f:
+        lines = f.readlines()
+    lines = [l.strip() for l in lines if l.strip() and not l.startswith("#")]
+
+    n_vertices, _, _ = map(int, lines[1].split())
+
+    return np.array(
+        [list(map(float, lines[i].split())) for i in range(2, 2 + n_vertices)],
+        dtype=float,
+    )
 
 
+def load_all_off_vertices(folder):
+    folder = Path(folder)
+    arrays = [load_off_vertices(p) for p in sorted(folder.glob("*.off"))]
+    return arrays
+
+
+data_samples = load_all_off_vertices("platyrrhine/ReparametrizedOFF")
 maps = loadmat("platyrrhine/softMapMatrix.mat")["softMapMatrix"]
-fiber_kernel = compute_fiber_kernel_from_maps(maps)
-base_distances = load_npz("example-data/teeth/base_distances.npz")
-block_indices = np.load("example-data/teeth/block_indices.npy")
+base_distances = load_npz(
+    "example-data/teeth/base_distances.npz"
+)
+# block_indices = np.load("example-data/teeth/block_indices.npy")
+
 
 config = HDMConfig(
-    base_sparsity = 0.4,
-)
+    base_epsilon = 0.04,
+    fiber_epsilon = 0.08,
+    base_knn=4,
+    fiber_knn=4,
+    device="cpu")
 
 points = hdm_embed(
-    config = config,
-    block_indices = block_indices,
-    fiber_kernel = fiber_kernel,
-    base_distances = base_distances
+    config=config,
+    maps=maps,
+    base_distances = base_distances,
+    data_samples = data_samples
 )
 
+
 points = pv.PolyData(points)
-plotter = pv.Plotter()   
+plotter = pv.Plotter()
 plotter.add_mesh(points, color="red", point_size=5, render_points_as_spheres=True)
 plotter.show()
-

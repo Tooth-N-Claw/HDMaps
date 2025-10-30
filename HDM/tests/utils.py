@@ -4,13 +4,9 @@ import numpy as np
 
 
 def load_pikle_file(file_path):
-    with open(file_path, 'rb') as file:
+    with open(file_path, "rb") as file:
         data = pickle.load(file)
     return data
-
-
-
-
 
 
 def compare_arrays(arr1, arr2):

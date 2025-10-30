@@ -11,16 +11,32 @@ authors = [
 ]
 description = "HDM description"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
 license = "GPL-3.0-or-later"
-dependencies = ['scipy~=1.14.0', 'trimesh==4.6.8', 'numpy>=1.18', 'pyvista==0.45.0', 'scikit-learn==1.6.1', 'tqdm==4.67.1']
+dependencies = [
+    "numpy>=2.0,<3.0",
+    "scipy>=1.15,<2.0",
+    "scikit-learn>=1.6,<2.0",
+    "pyvista>=0.45,<1.0",
+    "trimesh>=4.6,<5.0",
+    "tqdm>=4.67,<5.0",
+    "matplotlib>=3,<4.0",
+    "jax>=0.8,<0.9"
+]
 
 [project.urls]
 Homepage = "https://github.com/frisbro303/HDM_Python"
 
 [tool.setuptools.packages.find]
 include = ["HDM*"]
+
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+    "psutil>=7,<8"
+]
