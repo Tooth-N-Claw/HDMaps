@@ -10,7 +10,6 @@ from .utils import HDMConfig, get_backend
 def hdm_embed(
     config: HDMConfig = HDMConfig(),
     data_samples: Optional[list[np.ndarray]] = None,
-    block_indices: Optional[np.ndarray] = None,
     base_kernel: Optional[coo_matrix] = None,
     fiber_kernel: Optional[coo_matrix] = None,
     base_distances: Optional[coo_matrix] = None,
@@ -27,7 +26,6 @@ def hdm_embed(
     Parameters:
         config (HDMConfig): Configuration object specifying HDM parameters.
         data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
-        block_indices (np.ndarray, optional): Block indices specifying data partitioning. WARNING: this paramter is not used at the moment, the code assumes meshes have the same amount of points. An older version of the code supports this, however a bug is present in the code, 
         base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
         fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
         base_distances (coo_matrix, optional): Precomputed base distances.
@@ -36,32 +34,33 @@ def hdm_embed(
     Returns:
         np.ndarray: Diffusion coordinates from the joint HDM embedding.
     """
-    print("Compute HDM Embedding")
+    if config.verbose:
+        print("Compute HDM Embedding")
     base_kernel = compute_base_spatial(
         config, data_samples, base_distances, base_kernel
     )
-    print("Compute base kernel: Done.")
+    if config.verbose:
+        print("Compute base kernel: Done.")
 
     fiber_kernels = compute_fiber_spatial(
         config, data_samples, fiber_distances, fiber_kernel
     )
-    print("Compute fiber kernel: Done.")
-
-    # if block_indices is None and data_samples is not None:
-    #     block_indices = compute_block_indices(data_samples)
+    if config.verbose:
+        print("Compute fiber kernel: Done.")
 
     backend = get_backend(config)
 
     normalized_kernel, inv_sqrt_diag = backend.compute_joint_kernel_linear_operator(
-        base_kernel, fiber_kernels, block_indices, maps
+        base_kernel, fiber_kernels, maps
     )
-    print("Construct Linear Operator: Done.")
+    if config.verbose:
+        print("Construct Linear Operator: Done.")
     
     diffusion_coordinates = backend.spectral_embedding(
         config, normalized_kernel, inv_sqrt_diag
     )
-    
-    print("Spectral embedding: Done.")
+    if config.verbose:
+        print("Spectral embedding: Done.")
 
     return diffusion_coordinates
 

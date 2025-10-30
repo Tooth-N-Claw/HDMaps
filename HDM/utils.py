@@ -12,9 +12,10 @@ class HDMConfig(NamedTuple):
     base_metric: str = "frobenius"
     fiber_metric: str = "euclidean"
     base_sparsity: float = None
-    base_knn: int = 4
+    base_knn: int = None
     fiber_sparsity: float = None
-    fiber_knn: int = 4
+    fiber_knn: int = None
+    verbose: bool = True
 
 
 def compute_block_indices(data_samples: list[np.ndarray]) -> np.ndarray:
@@ -64,11 +65,9 @@ def get_backend(config: HDMConfig):
         from . import cpu
 
         return cpu
-    elif config.device == "cpu_ragged":
-        from . import cpu_ragged
 
-        return cpu_ragged
     elif config.device == "gpu":
+        print("Warning: gpu backend is currently under development and is currently not supported")
         from . import cupy
 
         return cupy

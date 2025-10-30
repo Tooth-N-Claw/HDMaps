@@ -26,7 +26,6 @@ The primary interface of the package is the `hdm_embed` function, which embeds t
 def hdm_embed(
     config: HDMConfig = HDMConfig(),
     data_samples: Optional[list[np.ndarray]] = None,
-    block_indices: Optional[np.ndarray] = None,
     base_kernel: Optional[coo_matrix] = None,
     fiber_kernel: Optional[coo_matrix] = None,
     base_distances: Optional[coo_matrix] = None,
@@ -43,7 +42,6 @@ def hdm_embed(
     Parameters:
         config (HDMConfig): Configuration object specifying HDM parameters.
         data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
-        block_indices (np.ndarray, optional): Block indices specifying data partitioning.
         base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
         fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
         base_distances (coo_matrix, optional): Precomputed base distances.
@@ -57,7 +55,7 @@ def hdm_embed(
 The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide either precomputed distances or kernels, or a mix of these.
 
 
-**Important:** Distances and block indices are computed automatically only if `data_samples` are provided. If `data_samples` are omitted, precomputed kernels and block indices must be supplied explicitly.
+**Important:** Distances are computed automatically only if `data_samples` are provided. If `data_samples` are omitted, precomputed kernels must be supplied explicitly.
 
 See the [examples](https://github.com/frisbro303/HDM_Python/tree/main/examples) folder for usage demonstrations.
 
@@ -76,7 +74,7 @@ The `HDMConfig` class provides configuration parameters for controlling kernel c
   Number of eigenvectors (dimension of embedding) to compute.
 
 - `device` (str or None, default="CPU")  
-  Device to run computations on (e.g., `"CPU"` or `"GPU"`).
+  Device to run computations on (e.g., `"cpu"` or `"gpu"`). **Note in the current implementation the `cpu` backend is generally the fastest and uses the least amount of memory**
 
 - `base_metric` (str, default="frobenius")  
   Metric used for base kernel distance computations.

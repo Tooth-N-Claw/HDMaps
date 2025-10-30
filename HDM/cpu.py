@@ -5,7 +5,7 @@ from .utils import HDMConfig
 from scipy.sparse.linalg import LinearOperator
 
 def compute_joint_kernel_linear_operator(
-    base_kernel: csr_matrix, sample_dists: list[np.ndarray], block_indices: np.ndarray, maps
+    base_kernel: csr_matrix, sample_dists: list[np.ndarray], maps
 ) -> coo_matrix:
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]

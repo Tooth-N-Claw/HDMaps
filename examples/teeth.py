@@ -34,7 +34,7 @@ maps = loadmat("platyrrhine/softMapMatrix.mat")["softMapMatrix"]
 base_distances = load_npz(
     "example-data/teeth/base_distances.npz"
 )
-block_indices = np.load("example-data/teeth/block_indices.npy")
+# block_indices = np.load("example-data/teeth/block_indices.npy")
 
 
 config = HDMConfig(
@@ -46,7 +46,6 @@ config = HDMConfig(
 
 points = hdm_embed(
     config=config,
-    block_indices = block_indices,
     maps=maps,
     base_distances = base_distances,
     data_samples = data_samples

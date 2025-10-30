@@ -32,9 +32,7 @@ if __name__ == '__main__':
         base_epsilon=0.03,
         fiber_epsilon=0.002,
         base_sparsity=1,
-        base_knn = None,
         fiber_sparsity=1,
-        fiber_knn=None,
         device="cpu"
     )
 

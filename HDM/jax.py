@@ -11,7 +11,6 @@ from .utils import HDMConfig
 def compute_joint_kernel_linear_operator(
     base_kernel: csr_matrix,
     sample_dists: list,
-    block_indices: jnp.ndarray,
     maps
 ):
     """Creates the normalized joint kernel as a JAX function. Jax does not however good support for sparse matrices, so is first done in scipy, then converted to jax sparse matrices."""

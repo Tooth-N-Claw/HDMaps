@@ -34,15 +34,25 @@ def symmetrize(mat):
 
 
 def compute_joint_kernel_linear_operator(
-    base_kernel, sample_dists: list, block_indices, maps
+    base_kernel, sample_dists: list, maps
 ):
 
     n = base_kernel.shape[0]
     m = sample_dists[0].shape[0]
     total_size = n * m
 
-    base_kernel = base_kernel.toarray()
-    maps = maps * base_kernel
+    # Convert to GPU CSR matrix and multiply by 0.5 for symmetry
+    base_kernel_gpu = cp_sparse.csr_matrix(base_kernel)
+    base_kernel_gpu.data *= 0.5  # we multiply by 0.5 here for symmetry when we later in diffusion_matvec do 0.5 * (M D + D^T M^T), we moved the 0.5 for efficiency
+
+    # Iterate over CSR structure without materializing rows/cols arrays
+    for i in range(base_kernel_gpu.shape[0]):
+        start = base_kernel_gpu.indptr[i]
+        end = base_kernel_gpu.indptr[i + 1]
+        for idx in range(start, end):
+            j = base_kernel_gpu.indices[idx]
+            value = base_kernel_gpu.data[idx]
+            maps[i][j].data *= value  # In-place multiplication
 
     maps = cp_sparse.bmat([[cp_sparse.csr_matrix(maps[i, j]) for j in range(n)] for i in range(n)], format='csr')
 
@@ -52,18 +62,25 @@ def compute_joint_kernel_linear_operator(
     sample_dists = cp_sparse.bmat(sample_dists_blocks, format='csr')
 
     def diffusion_matvec(v):
-        return 0.5 * (maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v))
+        return maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v)
 
     row_sums = diffusion_matvec(cp.ones(total_size))
     inv_sqrt_diag = 1 / cp.sqrt(row_sums)
+    D_inv_sqrt = cp_sparse.diags(inv_sqrt_diag, format='csr')
+    # precomputes normalized components to offload normalized_diffusion_matvec function since it will be called many times
+    sample_dists = sample_dists @ D_inv_sqrt
+    maps = D_inv_sqrt @ maps
 
-    def normalized_matvec(v):
-        return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
+    # def normalized_matvec(v):
+    #     return inv_sqrt_diag * diffusion_matvec(inv_sqrt_diag * v)
+
+    def normalized_diffusion_matvec(v):
+        return maps @ (sample_dists @ v) + sample_dists.T @ (maps.T @ v)
 
     normalized_kernel = cp_linalg.LinearOperator(
         shape=(total_size, total_size),
-        matvec=normalized_matvec, 
-        dtype=cp.float64
+        matvec=normalized_diffusion_matvec,
+        dtype=cp.float32
     )
 
     return normalized_kernel, inv_sqrt_diag
@@ -119,9 +136,10 @@ def spectral_embedding(
     kernel: cp_sparse.csr_matrix,
     inv_sqrt_diag: cp.ndarray,
 ) -> cp.ndarray:
-    sqrt_diag = cp_sparse.diags(inv_sqrt_diag, 0)
+
 
     eigvals, eigvecs = eigendecomposition(config, kernel)
+    sqrt_diag = cp_sparse.diags(inv_sqrt_diag, 0)
 
     bundle_HDM = sqrt_diag @ eigvecs[:, 1:]
     sqrt_lambda = cp_sparse.diags(cp.sqrt(eigvals[1:]), 0)
