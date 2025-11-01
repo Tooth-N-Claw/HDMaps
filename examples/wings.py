@@ -48,21 +48,23 @@ if __name__ == '__main__':
 
     hdm_coords, hbdm_coords, D = hdm_embed(data_samples=data_samples, config=config, fiber_kernel=None, maps=maps)
 
-    # 3D MDS
-    mds = MDS(n_components=3, dissimilarity='precomputed', random_state=42)
-    X_3d = mds.fit_transform(D)  # shape (n_points, 3)
+    print(D)
 
-    # Plot
-    fig = plt.figure(figsize=(8, 6))
-    ax = fig.add_subplot(111, projection='3d')
+    # # 3D MDS
+    # mds = MDS(n_components=3, dissimilarity='precomputed', random_state=42)
+    # X_3d = mds.fit_transform(D)  # shape (n_points, 3)
 
-    ax.scatter(X_3d[:, 0], X_3d[:, 1], X_3d[:, 2], c='blue', s=50, alpha=0.7)
-    ax.set_xlabel('MDS 1')
-    ax.set_ylabel('MDS 2')
-    ax.set_zlabel('MDS 3')
-    ax.set_title('3D MDS of Horizontal Base Diffusion Map')
+    # # Plot
+    # fig = plt.figure(figsize=(8, 6))
+    # ax = fig.add_subplot(111, projection='3d')
 
-    plt.show()
+    # ax.scatter(X_3d[:, 0], X_3d[:, 1], X_3d[:, 2], c='blue', s=50, alpha=0.7)
+    # ax.set_xlabel('MDS 1')
+    # ax.set_ylabel('MDS 2')
+    # ax.set_zlabel('MDS 3')
+    # ax.set_title('3D MDS of Horizontal Base Diffusion Map')
+
+    # plt.show()
 
     # Labels and title
     # ax.set_title("3D MDS embedding of HBDM coordinates", fontsize=14)
