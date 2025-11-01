@@ -56,13 +56,13 @@ def hdm_embed(
     if config.verbose:
         print("Construct Linear Operator: Done.")
     
-    diffusion_coordinates = backend.spectral_embedding(
-        config, normalized_kernel, inv_sqrt_diag
+    hdm_coords, hbdm_coords, D = backend.spectral_embedding(
+        config, data_samples, normalized_kernel, inv_sqrt_diag
     )
     if config.verbose:
         print("Spectral embedding: Done.")
 
-    return diffusion_coordinates
+    return hdm_coords, hbdm_coords, D
 
 
 def compute_base_distances(
