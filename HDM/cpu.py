@@ -3,10 +3,6 @@ import numpy as np
 import scipy.sparse as sparse
 from .utils import HDMConfig
 from scipy.sparse.linalg import LinearOperator
-import math
-from sklearn.preprocessing import normalize
-
-from scipy.spatial.distance import pdist
 
 def compute_joint_kernel_linear_operator(
     base_kernel: csr_matrix, sample_dists: list[np.ndarray], maps
@@ -79,23 +75,8 @@ def eigendecomposition(
     return eigvals, eigvecs
 
 
-def compute_HBDM_unique(U, lambdas, t):
-    k = len(lambdas)
-    n = U.shape[0]
-    scaled_U = U * (lambdas ** (t / 2))[None, :]
-
-    # full κ×κ symmetric tensor
-    M = np.einsum('il,im->ilm', scaled_U, scaled_U)
-
-    # extract upper triangular (l<m)
-    iu, ju = np.triu_indices(k, k=1)
-    HBDM = M[:, iu, ju]
-    return HBDM  # shape (n, nchoosek(k,2))
-
-
 def spectral_embedding(
     config: HDMConfig,
-    data_samples: list,
     kernel: csr_matrix,
     inv_sqrt_diag: np.ndarray,
 ) -> np.ndarray:
@@ -108,31 +89,4 @@ def spectral_embedding(
     sqrt_lambda = sparse.diags(np.sqrt(eigvals[1:]), 0)
     bundle_HDM_full = bundle_HDM @ sqrt_lambda
 
-    num_samples = len(data_samples)
-    sample_length = len(data_samples[0])
-    print("Assume all samples have equal length")
-
-
-    k = config.num_eigenvectors
-    num_pairs = int(math.comb(bundle_HDM.shape[1], 2))
-    hbdm = np.zeros((num_samples, num_pairs))
-
-    M = np.einsum('jl,jm->jlm', bundle_HDM, bundle_HDM)
-
-    
-    D = np.zeros((num_samples, num_samples))
-
-    for i in range(num_samples):
-        for j in range(i, num_samples):  # symmetric
-            diff = M[i] - M[j]
-            dist = np.sqrt(np.sum(diff**2))   # Frobenius norm squared
-            D[i, j] = dist
-            D[j, i] = dist    
-
-    # for j in range(num_samples):
-    #     block = bundle_HDM[j*sample_length:(j+1)*sample_length, :]
-    #     block = block / np.linalg.norm(block, axis=0, keepdims=True)
-    #     # block = block * np.sqrt(eigvals[1:config.num_eigenvectors])[None, :]   
-    #     hbdm[j, :] = pdist(block.T, metric=lambda x, y: np.dot(y, x))
-
-    return bundle_HDM_full, hbdm, D
+    return bundle_HDM_full
