@@ -6,9 +6,6 @@ import torch
 from .utils import HDMConfig, HDMResult, _is_cuda, approx_base_eps, torch_dtype
 
 
-
-
-
 def compute_gaussian_kernel(dist: np.ndarray, eps: float) -> np.ndarray:
     return np.exp(-(dist**2) / eps)
 
@@ -18,7 +15,6 @@ def build_base_kernel(config: HDMConfig, base_dist: np.ndarray) -> sp.csr_matrix
     knn = nn.kneighbors_graph(base_dist, mode="distance")
 
     assert not knn.diagonal().any()
-    # knn.setdiag(0)
     knn.eliminate_zeros()
     knn.data = knn.data.astype(config.dtype, copy=False)
 
@@ -36,13 +32,22 @@ def build_horizontal_diffusion_matrix(
     config: HDMConfig,
     maps: np.ndarray,
     base_kernel: sp.csr_matrix,
+    fiber_dists: np.ndarray,
     num_data_samples: int
 ) -> sp.csr_matrix:
     blocks = np.full((num_data_samples, num_data_samples), None, dtype=object)
     base_coo = base_kernel.tocoo()
+
+    for i in range(len(fiber_dists)):
+        fiber_dists[i].eliminate_zeros()
+        fiber_dists[i].setdiag(0.0)
+
     for i, j, v in zip(base_coo.row, base_coo.col, base_coo.data):
-        blocks[i, j] = maps[i, j] * v
+        mapped_dists = maps[i, j] @ fiber_dists[j]
+        mapped_dists.data = np.exp(-(mapped_dists.data ** 2) / config.fiber_epsilon)
+        blocks[i, j] = mapped_dists * v
     W = sp.bmat(blocks.tolist(), format='csr')
+
     return (W + W.T) * 0.5
 
 
@@ -140,7 +145,6 @@ def compute_spectral_embedding(
 
     HDM = V * (vals ** config.t)
 
-
     V_scaled = (vals ** (config.t/2)) * V
 
     HBDM = torch.zeros((num_data_samples, num_eig**2), dtype=V.dtype, device=V.device)
@@ -148,10 +152,6 @@ def compute_spectral_embedding(
     for i in range(num_data_samples):
         HBDM[i] = (V_scaled[offsets[i]:offsets[i+1]].T @ V_scaled[offsets[i]:offsets[i+1]]).ravel()
 
-
     HBDD = torch.cdist(HBDM, HBDM)
 
     return HDMResult(V.cpu().numpy(), vals.cpu().numpy(), HDM.cpu().numpy(), HBDM.cpu().numpy(), HBDD.cpu().numpy())
-
-def gram(V):
-    return V.T @ V

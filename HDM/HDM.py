@@ -7,6 +7,7 @@ def run_hdm(
     config: HDMConfig,
     base_dist: np.ndarray,
     maps: np.ndarray,
+    fiber_dists: np.ndarray | None = None,
 ) -> HDMResult:
     """
     Computes the Horizontal Diffusion Maps (HDM) and Horizontal Base Diffusion Distance (HBDD) from precomputed base distances and fiber maps.
@@ -18,13 +19,16 @@ def run_hdm(
         config (HDMConfig): Configuration object specifying HDM parameters.
         base_dist (np.ndarray): Dense (num_samples, num_samples) matrix of base distances.
         maps (np.ndarray): (num_samples, num_samples) object array of fiber correspondence
-            blocks
+            blocks.
+        fiber_dists (np.ndarray): (num_samples) object array of distance
+            matrices on each data sample.
 
     Returns:
         HDMResult: Eigenvectors, eigenvalues, HDM coordinates and HBDD coordinates.
     """
 
     validate_dtypes(config, base_dist, maps)
+
 
     num_data_samples, sizes = get_sizes(maps)
     backend = get_backend(config)
@@ -37,8 +41,9 @@ def run_hdm(
     if config.verbose:
         print("Compute base kernel: Done.")
 
+
     horizontal_diffusion_matrix = backend.build_horizontal_diffusion_matrix(
-        config, maps, base_kern, num_data_samples
+        config, maps, base_kern, fiber_dists, num_data_samples
     )
     if config.verbose:
         print("Construct Joint Kernel Matrix: Done.")
