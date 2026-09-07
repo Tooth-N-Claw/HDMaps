@@ -32,13 +32,17 @@ def build_horizontal_diffusion_matrix(
     config: HDMConfig,
     maps: np.ndarray,
     base_kernel: sp.csr_matrix,
-    data_sample_distances: np.ndarray,
-    num_data_samples: int
+    data_sample_distances: np.ndarray | None,
+    num_data_samples: int,
+    sizes: list[int]
 ) -> sp.csr_matrix:
     blocks = np.full((num_data_samples, num_data_samples), None, dtype=object)
     base_coo = base_kernel.tocoo()
 
-    for i in range(len(data_sample_distances)):
+    if data_sample_distances is None:
+        data_sample_distances = np.array([np.zeros((size, size)) for size in sizes])
+
+    for i in range(num_data_samples):
         data_sample_distances[i].eliminate_zeros()
         data_sample_distances[i].setdiag(0.0)
         data_sample_distances[i].data = np.exp(-(data_sample_distances[i].data ** 2) / config.fiber_epsilon)
