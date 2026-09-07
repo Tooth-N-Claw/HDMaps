@@ -40,7 +40,8 @@ def build_horizontal_diffusion_matrix(
     base_coo = base_kernel.tocoo()
 
     if data_sample_distances is None:
-        data_sample_distances = np.array([np.zeros((size, size)) for size in sizes])
+        print(sizes)
+        data_sample_distances = np.array([sp.csr_matrix((size, size)) for size in sizes])
 
     for i in range(num_data_samples):
         data_sample_distances[i].eliminate_zeros()
