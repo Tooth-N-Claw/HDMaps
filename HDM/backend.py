@@ -15,7 +15,6 @@ def build_base_kernel(config: HDMConfig, base_dist: np.ndarray) -> sp.csr_matrix
     knn = nn.kneighbors_graph(base_dist, mode="distance")
 
     assert not knn.diagonal().any()
-    # knn.setdiag(0)
     knn.eliminate_zeros()
     knn.data = knn.data.astype(config.dtype, copy=False)
 
@@ -38,16 +37,20 @@ def build_horizontal_diffusion_matrix(
 ) -> sp.csr_matrix:
     blocks = np.full((num_data_samples, num_data_samples), None, dtype=object)
     base_coo = base_kernel.tocoo()
+
+    for i in range(len(data_sample_distances)):
+        data_sample_distances[i].eliminate_zeros()
+        data_sample_distances[i].setdiag(0.0)
+        data_sample_distances[i].data = np.exp(-(data_sample_distances[i].data ** 2) / config.fiber_epsilon)
+
+
     for i, j, v in zip(base_coo.row, base_coo.col, base_coo.data):
+        if i == j:
+            continue
+        mapped_dists = maps[i, j] @ data_sample_distances[j]
+        blocks[i, j] = mapped_dists * v
 
-        K_j = data_sample_distances[j].copy()
-        K_j.data = np.exp(-(K_j.data ** 2) / config.fiber_epsilon)
-        blocks[i, j] = (maps[i, j] @ K_j) * v
-        # mapped_dists = maps[i, j] @ data_sample_distances[j]
-        # mapped_dists.data = np.exp(-(mapped_dists.data ** 2) / config.fiber_epsilon)
-        # blocks[i, j] = mapped_dists * v
     W = sp.bmat(blocks.tolist(), format='csr')
-
 
     return (W + W.T) * 0.5
 
