@@ -154,4 +154,4 @@ def compute_spectral_embedding(
 
     HBDD = torch.cdist(HBDM, HBDM)
 
-    return HDMResult(V.cpu().numpy(), vals.cpu().numpy(), HDM.cpu().numpy(), HBDM.cpu().numpy(), HBDD.cpu().numpy())
+    return HDMResult(V.cpu().numpy(), vals.cpu().numpy(), HDM.cpu().numpy(), HBDM.cpu().numpy(), HBDD.cpu().numpy(), offsets, config.t)

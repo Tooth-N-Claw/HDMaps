@@ -26,6 +26,8 @@ class HDMResult(NamedTuple):
     HDM: np.ndarray
     HBDM: np.ndarray
     HBDD: np.ndarray
+    offsets: np.ndarray
+    t: int
 
 
 def get_backend(config: HDMConfig):
