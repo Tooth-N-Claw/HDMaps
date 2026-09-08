@@ -8,7 +8,7 @@
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
-pip install git+https://github.com/frisbro303/HDM_Python
+pip install git+https://github.com/MorphMath/HDMaps
 ```
 
 ## Usage
@@ -19,92 +19,6 @@ To get started using HDM_Python, add the following import to the top of your Pyt
 ```python
 from HDM import hdm_embed, HDMConfig
 ```
-### The `hdm_embed`function
-The primary interface of the package is the `hdm_embed` function, which embeds the data in a Euclidean space preserving the horizontal diffusion distance. The function signature is given below:
-
-```python
-def hdm_embed(
-    config: HDMConfig = HDMConfig(),
-    data_samples: Optional[list[np.ndarray]] = None,
-    base_kernel: Optional[coo_matrix] = None,
-    fiber_kernel: Optional[coo_matrix] = None,
-    base_distances: Optional[coo_matrix] = None,
-    fiber_distances: Optional[coo_matrix] = None,
-) -> np.ndarray:
-
-    """
-    Compute the Horizontal Diffusion Maps (HDM) embedding from input data.
-
-    This function constructs and processes base and fiber kernels from the input data or 
-    precomputed distances/kernels, normalizes the resulting joint kernel, and computes 
-    a HDM embedding.
-
-    Parameters:
-        config (HDMConfig): Configuration object specifying HDM parameters.
-        data_samples (list[np.ndarray], optional): List of data arrays (e.g., sampled fibers).
-        base_kernel (coo_matrix, optional): Precomputed base kernel (spatial proximity).
-        fiber_kernel (coo_matrix, optional): Precomputed fiber kernel (fiber similarity).
-        base_distances (coo_matrix, optional): Precomputed base distances.
-        fiber_distances (coo_matrix, optional): Precomputed fiber distances.
-
-    Returns:
-        np.ndarray: Diffusion coordinates from the joint HDM embedding.
-    """
-
-```
-The embedding can be computed entirely from given data samples based on custom base and fiber metrics, or the user can provide either precomputed distances or kernels, or a mix of these.
-
-
-**Important:** Distances are computed automatically only if `data_samples` are provided. If `data_samples` are omitted, precomputed kernels must be supplied explicitly.
-
-See the [examples](https://github.com/frisbro303/HDM_Python/tree/main/examples) folder for usage demonstrations.
-
-
-### Configuration
-
-The `HDMConfig` class provides configuration parameters for controlling kernel computations and embedding:
-
-- `base_epsilon` (float, default=0.04)  
-  Bandwidth parameter for the base kernel.
-
-- `fiber_epsilon` (float, default=0.08)  
-  Bandwidth parameter for the fiber kernel.
-
-- `num_eigenvectors` (int, default=4)  
-  Number of eigenvectors (dimension of embedding) to compute.
-
-- `device` (str or None, default="CPU")  
-  Device to run computations on (e.g., `"cpu"` or `"gpu"`). **Note in the current implementation the `cpu` backend is generally the fastest and uses the least amount of memory**
-
-- `base_metric` (str, default="frobenius")  
-  Metric used for base kernel distance computations.
-
-- `fiber_metric` (str, default="euclidean")  
-  Metric used for fiber kernel distance computations.
-
-- `base_sparsity` (float, default=0.08)  
-  Sparsity parameter for the base kernel (controls graph sparsification).
-
-- `fiber_sparsity` (float, default=0.08)  
-  Sparsity parameter for the fiber kernel.
-
-### Example
-
-```python
-from hdm.utils import HDMConfig
-
-config = HDMConfig(
-    base_epsilon=0.05,
-    fiber_epsilon=0.1,
-    num_eigenvectors=3,
-    device="CPU",
-    base_metric="frobenius",
-    fiber_metric="euclidean",
-    base_sparsity=0.1,
-    fiber_sparsity=0.1,
-)
-```
-
 
 ## License
 
