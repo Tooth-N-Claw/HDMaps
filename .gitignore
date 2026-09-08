@@ -175,3 +175,12 @@ benchmark/plots/*
 
 .vscode/
 
+# Manim render output
+media/videos/
+media/texts/
+media/images/
+media/Tex/
+*.mp4
+animation.py
+picker.py
+
