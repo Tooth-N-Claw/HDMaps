@@ -5,6 +5,15 @@
 **A Python implementation of Horizontal Diffusion Maps (HDM), a manifold learning framework for data analysis of datasets with base-fiber structure.**
 
 
+## What is HDMaps?
+
+Horizontal Diffusion Maps (HDM) extend diffusion maps to collections of related data objects — shapes, images, point clouds — each carrying its own internal structure. HDM models the collection as a *fibre bundle*: a base manifold capturing how objects relate to one another, and a fibre over each point representing that object's structure as a noisy realization of a shared template. A random walk on the base is *lifted* across the fibres via correspondences between neighbouring objects, letting HDM both organize the objects and consistently register their internal structure into a shared coordinate system.
+
+![Horizontal diffusion demo](docs/media/hdm_demo.gif)
+
+*A random walk on the base manifold (top), lifted through the fibres (bottom) — hopping between objects also moves to the corresponding point on each object's structure.*
+
+
 ## Installation
 To install the latest development version of `HDM_Python` run:
 ```bash
