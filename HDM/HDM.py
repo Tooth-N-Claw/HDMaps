@@ -7,7 +7,7 @@ def run_hdm(
     config: HDMConfig,
     base_dist: np.ndarray,
     maps: np.ndarray,
-    fiber_dists: np.ndarray | None = None,
+    fiber_dists: np.ndarray,
 ) -> HDMResult:
     """
     Computes the Horizontal Diffusion Maps (HDM) and Horizontal Base Diffusion Distance (HBDD) from precomputed base distances and fiber maps.
