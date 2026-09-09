@@ -9,9 +9,9 @@
 HDM extends diffusion maps to collections of related data objects — shapes, images, point clouds — each carrying its own internal structure. It models the collection as a *fibre bundle*: a base manifold capturing how objects relate to one another, and a fibre over each point representing that object's structure as a noisy realization of a shared template. A random walk on the base is *lifted* across the fibres via correspondences between neighbouring objects, letting HDM organize the objects while consistently registering their internal structure into a shared coordinate system.
 
 <p align="center">
-  <img src="media/hdm_demo.gif" width="600" alt="A random walk on the base manifold, lifted through the fibres">
+  <img src="media/hdm_demo.gif" width="600" alt="A random walk on a neighbor graph on the base manifold, lifted through the fibres">
   <br>
-  <sub><em>A random walk on the base manifold (top) lifted through the fibres (bottom): hopping between objects moves to the corresponding point on each object's structure.</em></sub>
+  <sub><em>A random walk on a neighbor graph on the base manifold (top) lifted through the fibres (bottom): hopping between objects moves to the corresponding point on each object's structure.</em></sub>
 </p>
 
 
