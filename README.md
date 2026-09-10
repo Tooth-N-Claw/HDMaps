@@ -11,7 +11,7 @@ HDM extends diffusion maps to collections of related data objects — shapes, im
 <p align="center">
   <img src="media/hdm_demo.gif" width="600" alt="A random walk on a neighbor graph on the base manifold, lifted through the fibres">
   <br>
-  <sub><em>A random walk on a neighbor graph on the base manifold (top) lifted through the fibres (bottom): hopping between objects moves to the corresponding point on each object's structure.</em></sub>
+  <sub><em>A random walk on a neighbor graph on the base manifold lifted through the fibres: hopping between objects moves to the corresponding point on each object's structure.</em></sub>
 </p>
 
 
