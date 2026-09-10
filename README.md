@@ -20,14 +20,10 @@ To install the latest development version of `HDM_Python` run:
 ```bash
 pip install git+https://github.com/MorphMath/HDMaps
 ```
+## Documentation and Usage
 
-## Usage
-To make effective use of this package, it is recommended to have a basic understanding of Horizontal Diffusion Maps. For a short discussion of the methods employed see [docs](docs.md), and for the full treatment see the paper: [The diffusion geometry of fibre bundles: Horizontal diffusion maps](https://www.sciencedirect.com/science/article/pii/S1063520318302215).
+See [docs.md](docs.md) for the full documentation, including an [introduction to Horizontal Diffusion Maps](docs.md/#methods) and the [paper](https://www.sciencedirect.com/science/article/pii/S1063520318302215) for full treatment. Examples are in [examples/](examples/).
 
-To get started using HDM_Python, add the following import to the top of your Python file:
-```python
-from HDM import hdm_embed, HDMConfig
-```
 
 ## License
 
