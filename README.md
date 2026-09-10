@@ -20,15 +20,14 @@ To install the latest development version of `HDM_Python` run:
 ```bash
 pip install git+https://github.com/MorphMath/HDMaps
 ```
+
+## Theory
+For a short, accesible overview, see [Introduction to Horizontal Diffusion Maps](docs.md/#theory). For the full treatment, see the [paper](https://www.sciencedirect.com/science/article/pii/S1063520318302215).
+
 ## Documentation and Usage
 
-See [docs.md](docs.md) for the full documentation, including an [introduction to Horizontal Diffusion Maps](docs.md/#methods) and the [paper](https://www.sciencedirect.com/science/article/pii/S1063520318302215) for full treatment. Examples are in [examples/](examples/).
-
+Full documentation is in [docs.md](docs.md). See [examples/](examples/) for usage examples.
 
 ## License
 
 This software is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-
-
-
