@@ -1,22 +1,38 @@
-# HDMaps: Horizontal Diffusion Maps implemented in Python
+# HDM_Python
 [![Test package](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml/badge.svg)](https://github.com/frisbro303/HDM_Python/actions/workflows/test.yml)
-[![License: MIT](https://shields.io)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+**A Python implementation of Horizontal Diffusion Maps (HDM), a manifold learning framework for data analysis of datasets with base-fiber structure.**
 
-**A Python implementation of Horizontal Diffusion Maps (HDM), a manifold learning framework for analysis of datasets with base-fiber structure.**
+## What is HDMaps?
+
+HDM extends diffusion maps to collections of related data objects — shapes, images, point clouds — each carrying its own internal structure. It models the collection as a *fibre bundle*: a base manifold capturing how objects relate to one another, and a fibre over each point representing that object's structure as a noisy realization of a shared template. A random walk on the base is *lifted* across the fibres via correspondences between neighbouring objects, letting HDM organize the objects while consistently registering their internal structure into a shared coordinate system.
+
+<p align="center">
+  <img src="media/hdm_demo.gif" width="600" alt="A random walk on a neighbor graph on the base manifold, lifted through the fibres">
+  <br>
+  <sub><em>A random walk on a neighbor graph on the base manifold (top) lifted through the fibres (bottom): hopping between objects moves to the corresponding point on each object's structure.</em></sub>
+</p>
+
 
 ## Installation
-To install the latest development version of `HDMaps` run:
+To install the latest development version of `HDM_Python` run:
 ```bash
-pip install git+https://github.com/frisbro303/HDM_Python
+pip install git+https://github.com/MorphMath/HDMaps
 ```
 
-## Usage and Documentation
-The package provides an accessible implementation of Horizontal Diffusion Maps, as introduced in the paper: [The diffusion geometry of fibre bundles: Horizontal diffusion maps](https://www.sciencedirect.com/science/article/pii/S1063520318302215).
+## Usage
+To make effective use of this package, it is recommended to have a basic understanding of Horizontal Diffusion Maps. For a short discussion of the methods employed see [docs](docs.md), and for the full treatment see the paper: [The diffusion geometry of fibre bundles: Horizontal diffusion maps](https://www.sciencedirect.com/science/article/pii/S1063520318302215).
 
-Detailed usage instructions is found in [docs.md](docs.md).
+To get started using HDM_Python, add the following import to the top of your Python file:
+```python
+from HDM import hdm_embed, HDMConfig
+```
 
 ## License
 
-This software is licensed under the MIT License. See the [LICENSE](https://github.com/frisbro303/SignDNE/blob/2347bf47a35affe612ac8d60e64805a3f1891951/LICENSE) file for details. 
+This software is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+
+
 
